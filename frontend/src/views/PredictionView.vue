@@ -14,104 +14,122 @@
       <!-- 预测控制栏 -->
       <el-card style="margin-bottom: 20px">
         <div class="control-panel">
-          <el-row :gutter="20">
-            <el-col :span="6">
-              <el-select
-                v-model="selectedCommunity"
-                placeholder="选择社区"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="community in communities"
-                  :key="community"
-                  :label="community"
-                  :value="community"
-                />
-              </el-select>
-            </el-col>
-            <el-col :span="6">
-              <el-select
-                v-model="selectedService"
-                placeholder="选择服务"
-                style="width: 100%"
-              >
-                <el-option
-                  v-for="service in services"
-                  :key="service"
-                  :label="service"
-                  :value="service"
-                />
-              </el-select>
-            </el-col>
-            <el-col :span="6">
-              <el-select
-                v-model="predictionDays"
-                placeholder="预测天数"
-                style="width: 100%"
-              >
-                <el-option label="7天" value="7" />
-                <el-option label="14天" value="14" />
-                <el-option label="30天" value="30" />
-                <el-option label="90天" value="90" />
-              </el-select>
-            </el-col>
-            <el-col :span="6">
-              <el-select
-                v-model="predictionModel"
-                placeholder="预测模型"
-                style="width: 100%"
-              >
-                <el-option label="随机森林" value="random_forest" />
-                <el-option label="梯度提升" value="gradient_boosting" />
-                <el-option label="XGBoost" value="xgboost" />
-                <el-option label="集成模型" value="ensemble" />
-              </el-select>
-            </el-col>
-          </el-row>
-          <el-row :gutter="20" style="margin-top: 10px">
-            <el-col :span="6">
-              <el-date-picker
-                v-model="dateRange"
-                type="daterange"
-                range-separator="至"
-                start-placeholder="开始日期"
-                end-placeholder="结束日期"
-                style="width: 100%"
-              />
-            </el-col>
-            <el-col :span="6">
-              <el-select
-                v-model="seasonalAnalysis"
-                placeholder="季节性分析"
-                style="width: 100%"
-              >
-                <el-option label="无" value="none" />
-                <el-option label="周度" value="weekly" />
-                <el-option label="月度" value="monthly" />
-                <el-option label="季度" value="quarterly" />
-              </el-select>
-            </el-col>
-            <el-col :span="6">
-              <el-select
-                v-model="confidenceLevel"
-                placeholder="置信度"
-                style="width: 100%"
-              >
-                <el-option label="80%" value="0.8" />
-                <el-option label="90%" value="0.9" />
-                <el-option label="95%" value="0.95" />
-              </el-select>
-            </el-col>
-            <el-col :span="6">
-              <el-button
-                type="primary"
-                @click="refreshData"
-                style="width: 100%"
-              >
-                刷新数据
-              </el-button>
-            </el-col>
-          </el-row>
+          <el-form label-position="top">
+            <el-row :gutter="20">
+              <el-col :span="6">
+                <el-form-item label="社区">
+                  <el-select
+                    v-model="selectedCommunity"
+                    placeholder="选择社区"
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="community in communities"
+                      :key="community"
+                      :label="community"
+                      :value="community"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="服务类型">
+                  <el-select
+                    v-model="selectedService"
+                    placeholder="选择服务"
+                    style="width: 100%"
+                  >
+                    <el-option
+                      v-for="service in services"
+                      :key="service"
+                      :label="service"
+                      :value="service"
+                    />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="预测天数">
+                  <el-select
+                    v-model="predictionDays"
+                    placeholder="选择预测天数"
+                    style="width: 100%"
+                  >
+                    <el-option label="7天" value="7" />
+                    <el-option label="14天" value="14" />
+                    <el-option label="30天" value="30" />
+                    <el-option label="90天" value="90" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="预测模型">
+                  <el-select
+                    v-model="predictionModel"
+                    placeholder="选择预测模型"
+                    style="width: 100%"
+                  >
+                    <el-option label="随机森林" value="random_forest" />
+                    <el-option label="梯度提升" value="gradient_boosting" />
+                    <el-option label="XGBoost" value="xgboost" />
+                    <el-option label="集成模型" value="ensemble" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+            </el-row>
+            <el-row :gutter="20" style="margin-top: 10px">
+              <el-col :span="6">
+                <el-form-item label="日期范围">
+                  <el-date-picker
+                    v-model="dateRange"
+                    type="daterange"
+                    range-separator="至"
+                    start-placeholder="开始日期"
+                    end-placeholder="结束日期"
+                    style="width: 100%"
+                  />
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="季节性分析">
+                  <el-select
+                    v-model="seasonalAnalysis"
+                    placeholder="选择季节性分析"
+                    style="width: 100%"
+                  >
+                    <el-option label="无" value="none" />
+                    <el-option label="周度" value="weekly" />
+                    <el-option label="月度" value="monthly" />
+                    <el-option label="季度" value="quarterly" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="置信度">
+                  <el-select
+                    v-model="confidenceLevel"
+                    placeholder="选择置信度"
+                    style="width: 100%"
+                  >
+                    <el-option label="80%" value="0.8" />
+                    <el-option label="90%" value="0.9" />
+                    <el-option label="95%" value="0.95" />
+                  </el-select>
+                </el-form-item>
+              </el-col>
+              <el-col :span="6">
+                <el-form-item label="操作">
+                  <el-button
+                    type="primary"
+                    @click="refreshData"
+                    style="width: 100%"
+                  >
+                    刷新数据
+                  </el-button>
+                </el-form-item>
+              </el-col>
+            </el-row>
+          </el-form>
         </div>
       </el-card>
 
@@ -180,17 +198,17 @@
             </div>
           </div>
         </template>
-        <el-table :data="filteredRecommendations" style="width: 100%">
-          <el-table-column prop="community" label="社区" width="120" />
-          <el-table-column prop="service" label="服务类型" width="120" />
-          <el-table-column
-            prop="predicted_demand"
-            label="预测需求"
-            width="120"
-          />
-          <el-table-column prop="daily_avg" label="日均需求" width="120" />
-          <el-table-column prop="staff_needed" label="所需人员" width="100" />
-          <el-table-column prop="priority" label="优先级" width="100">
+        <el-table
+          :data="filteredRecommendations"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="community" label="社区" />
+          <el-table-column prop="service" label="服务类型" />
+          <el-table-column prop="predicted_demand" label="预测需求" />
+          <el-table-column prop="daily_avg" label="日均需求" />
+          <el-table-column prop="staff_needed" label="所需人员" />
+          <el-table-column prop="priority" label="优先级">
             <template #default="scope">
               <el-tag :type="getPriorityType(scope.row.priority)">
                 {{ scope.row.priority }}
@@ -198,7 +216,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="suggestion" label="建议" />
-          <el-table-column prop="confidence" label="置信度" width="100">
+          <el-table-column prop="confidence" label="置信度">
             <template #default="scope">
               <el-progress
                 :percentage="scope.row.confidence || 0"
@@ -333,12 +351,16 @@
     >
       <div class="dialog-content">
         <h3>详细预测数据</h3>
-        <el-table :data="predictionDetailData" style="width: 100%">
-          <el-table-column prop="date" label="日期" width="120" />
-          <el-table-column prop="value" label="预测值" width="100" />
-          <el-table-column prop="lower_bound" label="下限" width="100" />
-          <el-table-column prop="upper_bound" label="上限" width="100" />
-          <el-table-column prop="confidence" label="置信度" width="100" />
+        <el-table
+          :data="predictionDetailData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="date" label="日期" />
+          <el-table-column prop="value" label="预测值" />
+          <el-table-column prop="lower_bound" label="下限" />
+          <el-table-column prop="upper_bound" label="上限" />
+          <el-table-column prop="confidence" label="置信度" />
           <el-table-column prop="trend" label="趋势" />
         </el-table>
         <div
@@ -358,18 +380,18 @@
     >
       <div class="dialog-content">
         <h3>详细资源配置建议</h3>
-        <el-table :data="resourceDetailData" style="width: 100%">
-          <el-table-column prop="community" label="社区" width="120" />
-          <el-table-column prop="service" label="服务类型" width="120" />
-          <el-table-column
-            prop="predicted_demand"
-            label="预测需求"
-            width="120"
-          />
-          <el-table-column prop="current_staff" label="现有人员" width="100" />
-          <el-table-column prop="needed_staff" label="需要人员" width="100" />
-          <el-table-column prop="shortage" label="缺口" width="80" />
-          <el-table-column prop="priority" label="优先级" width="80">
+        <el-table
+          :data="resourceDetailData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="community" label="社区" />
+          <el-table-column prop="service" label="服务类型" />
+          <el-table-column prop="predicted_demand" label="预测需求" />
+          <el-table-column prop="current_staff" label="现有人员" />
+          <el-table-column prop="needed_staff" label="需要人员" />
+          <el-table-column prop="shortage" label="缺口" />
+          <el-table-column prop="priority" label="优先级">
             <template #default="scope">
               <el-tag :type="getPriorityType(scope.row.priority)">
                 {{ scope.row.priority }}

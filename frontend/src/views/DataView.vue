@@ -76,7 +76,12 @@
             </div>
           </div>
         </template>
-        <el-table :data="seniorsData" style="width: 100%" border>
+        <el-table
+          :data="seniorsData"
+          style="width: 100%"
+          border
+          show-overflow-tooltip
+        >
           <el-table-column prop="id" label="ID" />
           <el-table-column prop="age" label="年龄" />
           <el-table-column prop="community_id" label="社区" />
@@ -88,11 +93,7 @@
             </template>
           </el-table-column>
           <el-table-column prop="service_count" label="服务次数" />
-          <el-table-column
-            prop="avg_satisfaction"
-            label="平均满意度"
-            width="120"
-          />
+          <el-table-column prop="avg_satisfaction" label="平均满意度" />
         </el-table>
         <div class="pagination" style="margin-top: 20px">
           <el-pagination
@@ -131,7 +132,12 @@
             </div>
           </div>
         </template>
-        <el-table :data="healthRecords" style="width: 100%" border>
+        <el-table
+          :data="healthRecords"
+          style="width: 100%"
+          border
+          show-overflow-tooltip
+        >
           <el-table-column prop="id" label="记录ID" />
           <el-table-column prop="senior_id" label="老人ID" />
           <el-table-column prop="date" label="记录日期" />
@@ -189,7 +195,12 @@
             </div>
           </div>
         </template>
-        <el-table :data="serviceRecords" style="width: 100%" border>
+        <el-table
+          :data="serviceRecords"
+          style="width: 100%"
+          border
+          show-overflow-tooltip
+        >
           <el-table-column prop="id" label="记录ID" />
           <el-table-column prop="senior_id" label="老人ID" />
           <el-table-column prop="service_date" label="服务日期" />
@@ -200,7 +211,7 @@
               <el-rate v-model="scope.row.satisfaction" disabled />
             </template>
           </el-table-column>
-          <el-table-column prop="community_id" label="社区" width="100" />
+          <el-table-column prop="community_id" label="社区" />
         </el-table>
         <div class="pagination" style="margin-top: 20px">
           <el-pagination

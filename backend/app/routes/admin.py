@@ -56,7 +56,7 @@ def get_logs():
     """
     try:
         logs = admin_service.get_logs()
-        return jsonify(logs)
+        return jsonify({'data': logs})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
 
@@ -68,6 +68,6 @@ def get_data_quality():
     """
     try:
         data_quality = admin_service.get_data_quality()
-        return jsonify(data_quality)
+        return jsonify({'data': data_quality})
     except Exception as e:
         return jsonify({'error': str(e)}), 500

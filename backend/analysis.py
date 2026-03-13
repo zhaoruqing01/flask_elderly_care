@@ -19,7 +19,10 @@ from datetime import datetime, timedelta  # 用于处理日期
 
 # 数据库文件路径
 import os
-DB_PATH = os.path.join(os.path.dirname(__file__), 'data', 'database', 'elderly_care.db')
+import sys
+sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+from app.config.config import current_config
+DB_PATH = current_config.DATABASE_PATH
 
 
 def get_health_distribution():
@@ -269,7 +272,7 @@ def get_service_satisfaction():
     # 返回结果，保留一位小数
     return {
         'types': service_types,
-        'satisfaction': [round(satisfaction.get(service, 0), 1) for service in service_types]
+        'scores': [round(satisfaction.get(service, 0), 1) for service in service_types]
     }
 
 

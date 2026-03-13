@@ -70,7 +70,7 @@ interface ServiceByCommunity {
 
 interface ServiceSatisfaction {
   types: string[]
-  satisfaction: number[]
+  scores: number[]
 }
 
 interface ServiceTrend {
@@ -84,7 +84,7 @@ interface ServiceTrend {
 // 响应式数据
 const serviceFrequency = ref<ServiceFrequency>({ types: [], counts: [] })
 const serviceByCommunity = ref<ServiceByCommunity>({ communities: [], datasets: [] })
-const serviceSatisfaction = ref<ServiceSatisfaction>({ types: [], satisfaction: [] })
+const serviceSatisfaction = ref<ServiceSatisfaction>({ types: [], scores: [] })
 const serviceTrend = ref<ServiceTrend>({ dates: [], datasets: [] })
 
 // 图表实例
@@ -210,7 +210,7 @@ const initCharts = () => {
       {
         name: '满意度',
         type: 'bar',
-        data: serviceSatisfaction.value.satisfaction || [],
+        data: serviceSatisfaction.value.scores || [],
         itemStyle: {
           color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
             { offset: 0, color: '#87e0fd' },

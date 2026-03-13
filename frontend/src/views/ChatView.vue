@@ -20,7 +20,7 @@
             </div>
           </div>
         </template>
-        <div class="chat-messages">
+        <div class="chat-messages" ref="chatMessagesRef">
           <div
             v-for="(message, index) in messages"
             :key="index"
@@ -96,6 +96,7 @@ const messages = ref([]);
 const inputMessage = ref("");
 const isLoading = ref(false);
 const commonQuestions = ref([]);
+const chatMessagesRef = ref(null);
 
 // 发送消息
 const sendMessage = async () => {
@@ -132,6 +133,8 @@ const sendMessage = async () => {
       timestamp: new Date().toLocaleTimeString(),
     };
     messages.value.push(aiMessage);
+    // 滚动到对话底部
+    scrollToBottom();
   } catch (error) {
     console.error("发送消息失败:", error);
     ElMessage.error("发送消息失败，请稍后重试");
@@ -143,6 +146,8 @@ const sendMessage = async () => {
       timestamp: new Date().toLocaleTimeString(),
     };
     messages.value.push(errorMessage);
+    // 滚动到对话底部
+    scrollToBottom();
   } finally {
     // 隐藏加载状态
     isLoading.value = false;
@@ -153,6 +158,18 @@ const sendMessage = async () => {
 const selectQuestion = (question: string) => {
   inputMessage.value = question;
   sendMessage();
+};
+
+// 滚动到对话底部
+const scrollToBottom = () => {
+  setTimeout(() => {
+    if (chatMessagesRef.value) {
+      chatMessagesRef.value.scrollTo({
+        top: chatMessagesRef.value.scrollHeight,
+        behavior: "smooth",
+      });
+    }
+  }, 100);
 };
 
 // 清空聊天
@@ -207,6 +224,8 @@ const loadInitialMessage = async () => {
           timestamp: new Date().toLocaleTimeString(),
         },
       ];
+      // 滚动到对话底部
+      scrollToBottom();
     }
   } catch (error) {
     ElMessage.error("请求失败：" + error);
@@ -218,6 +237,8 @@ const loadInitialMessage = async () => {
         timestamp: new Date().toLocaleTimeString(),
       },
     ];
+    // 滚动到对话底部
+    scrollToBottom();
   }
 };
 
@@ -268,7 +289,7 @@ onMounted(() => {
 }
 
 .chat-messages {
-  height: 190px;
+  height: 300px;
   overflow-y: auto;
   padding: 20px;
   border-bottom: 1px solid #eaeef1;

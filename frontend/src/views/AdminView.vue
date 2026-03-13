@@ -74,10 +74,10 @@
             </el-button>
           </div>
         </template>
-        <el-table :data="dataQuality" style="width: 100%">
-          <el-table-column prop="name" label="数据类型" width="120" />
-          <el-table-column prop="count" label="记录数" width="100" />
-          <el-table-column prop="missing" label="缺失值" width="100" />
+        <el-table :data="dataQuality" style="width: 100%" show-overflow-tooltip>
+          <el-table-column prop="name" label="数据类型" />
+          <el-table-column prop="count" label="记录数" />
+          <el-table-column prop="missing" label="缺失值" />
           <el-table-column prop="quality" label="质量状态">
             <template #default="scope">
               <el-tag
@@ -103,10 +103,10 @@
             <span>操作日志</span>
           </div>
         </template>
-        <el-table :data="logs" style="width: 100%">
-          <el-table-column prop="time" label="时间" width="180" />
-          <el-table-column prop="action" label="操作" width="150" />
-          <el-table-column prop="status" label="状态" width="100">
+        <el-table :data="logs" style="width: 100%" show-overflow-tooltip>
+          <el-table-column prop="time" label="时间" />
+          <el-table-column prop="action" label="操作" />
+          <el-table-column prop="status" label="状态">
             <template #default="scope">
               <el-tag
                 :type="scope.row.status === '成功' ? 'success' : 'danger'"

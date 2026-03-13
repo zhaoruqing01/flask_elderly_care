@@ -84,11 +84,15 @@
     >
       <div class="dialog-content">
         <h3>健康状况总览</h3>
-        <el-table :data="healthOverviewData" style="width: 100%">
-          <el-table-column prop="indicator" label="指标" width="150" />
-          <el-table-column prop="value" label="数值" width="100" />
-          <el-table-column prop="unit" label="单位" width="80" />
-          <el-table-column prop="change" label="变化" width="100" />
+        <el-table
+          :data="healthOverviewData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="indicator" label="指标" />
+          <el-table-column prop="value" label="数值" />
+          <el-table-column prop="unit" label="单位" />
+          <el-table-column prop="change" label="变化" />
           <el-table-column prop="description" label="说明" />
         </el-table>
         <div
@@ -108,13 +112,17 @@
     >
       <div class="dialog-content">
         <h3>健康状态详细分布</h3>
-        <el-table :data="healthDistributionDetailData" style="width: 100%">
-          <el-table-column prop="status" label="健康状态" width="120" />
-          <el-table-column prop="count" label="人数" width="100" />
-          <el-table-column prop="percentage" label="占比" width="100" />
-          <el-table-column prop="male_count" label="男性" width="80" />
-          <el-table-column prop="female_count" label="女性" width="80" />
-          <el-table-column prop="avg_age" label="平均年龄" width="100" />
+        <el-table
+          :data="healthDistributionDetailData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="status" label="健康状态" />
+          <el-table-column prop="count" label="人数" />
+          <el-table-column prop="percentage" label="占比" />
+          <el-table-column prop="male_count" label="男性" />
+          <el-table-column prop="female_count" label="女性" />
+          <el-table-column prop="avg_age" label="平均年龄" />
         </el-table>
         <div
           class="chart-container-small"
@@ -133,13 +141,17 @@
     >
       <div class="dialog-content">
         <h3>各年龄段健康状态分析</h3>
-        <el-table :data="healthByAgeDetailData" style="width: 100%">
-          <el-table-column prop="age_group" label="年龄段" width="120" />
-          <el-table-column prop="good_count" label="良好" width="80" />
-          <el-table-column prop="critical_count" label="临界" width="80" />
-          <el-table-column prop="high_risk_count" label="高危" width="80" />
-          <el-table-column prop="total" label="总计" width="80" />
-          <el-table-column prop="high_risk_rate" label="高危率" width="100" />
+        <el-table
+          :data="healthByAgeDetailData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="age_group" label="年龄段" />
+          <el-table-column prop="good_count" label="良好" />
+          <el-table-column prop="critical_count" label="临界" />
+          <el-table-column prop="high_risk_count" label="高危" />
+          <el-table-column prop="total" label="总计" />
+          <el-table-column prop="high_risk_rate" label="高危率" />
         </el-table>
         <div
           class="chart-container-small"
@@ -158,12 +170,16 @@
     >
       <div class="dialog-content">
         <h3>健康状态变化趋势</h3>
-        <el-table :data="healthTrendDetailData" style="width: 100%">
-          <el-table-column prop="date" label="日期" width="120" />
-          <el-table-column prop="good_count" label="良好" width="80" />
-          <el-table-column prop="critical_count" label="临界" width="80" />
-          <el-table-column prop="high_risk_count" label="高危" width="80" />
-          <el-table-column prop="high_risk_rate" label="高危率" width="100" />
+        <el-table
+          :data="healthTrendDetailData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="date" label="日期" />
+          <el-table-column prop="good_count" label="良好" />
+          <el-table-column prop="critical_count" label="临界" />
+          <el-table-column prop="high_risk_count" label="高危" />
+          <el-table-column prop="high_risk_rate" label="高危率" />
           <el-table-column prop="change" label="变化" />
         </el-table>
         <div
@@ -183,11 +199,15 @@
     >
       <div class="dialog-content">
         <h3>健康照护建议</h3>
-        <el-table :data="healthRecommendationsData" style="width: 100%">
-          <el-table-column prop="category" label="类别" width="120" />
-          <el-table-column prop="title" label="标题" width="180" />
+        <el-table
+          :data="healthRecommendationsData"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="category" label="类别" />
+          <el-table-column prop="title" label="标题" />
           <el-table-column prop="content" label="建议内容" />
-          <el-table-column prop="target" label="适用人群" width="120" />
+          <el-table-column prop="target" label="适用人群" />
         </el-table>
       </div>
     </el-dialog>

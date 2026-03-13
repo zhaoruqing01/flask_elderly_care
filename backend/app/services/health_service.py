@@ -19,7 +19,12 @@ class HealthService:
         """
         query = '''
         SELECT health_status, COUNT(*) as count 
-        FROM health_record 
+        FROM (
+            SELECT senior_id, health_status, 
+                   ROW_NUMBER() OVER (PARTITION BY senior_id ORDER BY date DESC) as rn
+            FROM health_record
+        ) t
+        WHERE rn = 1
         GROUP BY health_status
         '''
         
@@ -54,11 +59,16 @@ class HealthService:
                 WHEN s.age >= 80 AND s.age < 90 THEN '80-89' 
                 ELSE '90+' 
             END as age_group,
-            h.health_status,
+            t.health_status,
             COUNT(*) as count
-        FROM health_record h
-        JOIN senior s ON h.senior_id = s.id
-        GROUP BY age_group, h.health_status
+        FROM (
+            SELECT senior_id, health_status, 
+                   ROW_NUMBER() OVER (PARTITION BY senior_id ORDER BY date DESC) as rn
+            FROM health_record
+        ) t
+        JOIN senior s ON t.senior_id = s.id
+        WHERE t.rn = 1
+        GROUP BY age_group, t.health_status
         ORDER BY age_group
         '''
         

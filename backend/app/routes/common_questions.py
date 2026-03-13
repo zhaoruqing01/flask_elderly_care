@@ -20,7 +20,7 @@ def get_common_questions():
             "老人的健康状况如何？",
             "如何优化服务资源配置？"
         ]
-        return jsonify(common_questions)
+        return jsonify({'data': common_questions})
     except Exception as e:
         print(f"获取常见问题失败: {e}")
         return jsonify({'error': '获取常见问题失败'}), 500

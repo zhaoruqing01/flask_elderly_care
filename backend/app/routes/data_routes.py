@@ -86,7 +86,37 @@ def get_seniors():
         params.extend([page_size, offset])
         
         cursor.execute(query, params)
-        seniors = [dict(row) for row in cursor.fetchall()]
+        seniors = []
+        
+        for row in cursor.fetchall():
+            senior = dict(row)
+            senior_id = senior['id']
+            
+            # 获取老人的最新健康状态
+            health_query = '''
+            SELECT health_status 
+            FROM health_record 
+            WHERE senior_id = ? 
+            ORDER BY date DESC 
+            LIMIT 1
+            '''
+            cursor.execute(health_query, (senior_id,))
+            health_result = cursor.fetchone()
+            senior['health_status'] = health_result[0] if health_result else '未知'
+            
+            # 获取老人的服务次数
+            service_count_query = 'SELECT COUNT(*) FROM service_log WHERE senior_id = ?'
+            cursor.execute(service_count_query, (senior_id,))
+            service_count_result = cursor.fetchone()
+            senior['service_count'] = service_count_result[0] if service_count_result else 0
+            
+            # 获取老人的平均满意度
+            satisfaction_query = 'SELECT AVG(satisfaction) FROM service_log WHERE senior_id = ?'
+            cursor.execute(satisfaction_query, (senior_id,))
+            satisfaction_result = cursor.fetchone()
+            senior['avg_satisfaction'] = round(float(satisfaction_result[0]), 1) if satisfaction_result and satisfaction_result[0] else 0
+            
+            seniors.append(senior)
         
         conn.close()
         
