@@ -22,7 +22,7 @@ class HealthService:
         FROM (
             SELECT senior_id, health_status, 
                    ROW_NUMBER() OVER (PARTITION BY senior_id ORDER BY date DESC) as rn
-            FROM health_record
+            FROM health_records
         ) t
         WHERE rn = 1
         GROUP BY health_status
@@ -64,9 +64,9 @@ class HealthService:
         FROM (
             SELECT senior_id, health_status, 
                    ROW_NUMBER() OVER (PARTITION BY senior_id ORDER BY date DESC) as rn
-            FROM health_record
+            FROM health_records
         ) t
-        JOIN senior s ON t.senior_id = s.id
+        JOIN seniors s ON t.senior_id = s.id
         WHERE t.rn = 1
         GROUP BY age_group, t.health_status
         ORDER BY age_group
@@ -110,7 +110,7 @@ class HealthService:
             strftime('%Y-%m', date) as month,
             health_status,
             COUNT(*) as count
-        FROM health_record
+        FROM health_records
         GROUP BY month, health_status
         ORDER BY month
         '''

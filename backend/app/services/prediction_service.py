@@ -139,7 +139,7 @@ class PredictionService:
         if community:
             query = f'''
             SELECT service_type, COUNT(*) as count 
-            FROM service_log 
+            FROM service_records 
             WHERE community_id = "{community}"
             GROUP BY service_type
             ORDER BY count DESC
@@ -147,7 +147,7 @@ class PredictionService:
         else:
             query = '''
             SELECT service_type, COUNT(*) as count 
-            FROM service_log 
+            FROM service_records 
             GROUP BY service_type
             ORDER BY count DESC
             '''
@@ -163,7 +163,7 @@ class PredictionService:
             if community_name:
                 community_query = f'''
                 SELECT service_type, COUNT(*) as count 
-                FROM service_log 
+                FROM service_records 
                 WHERE community_id = "{community_name}"
                 GROUP BY service_type
                 ORDER BY count DESC
