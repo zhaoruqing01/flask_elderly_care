@@ -47,3 +47,27 @@ def generate_data():
         return jsonify({'message': '模拟数据生成完成！'})
     except Exception as e:
         return jsonify({'error': str(e)}), 500
+
+@bp.route('/logs', methods=['GET'])
+def get_logs():
+    """获取操作日志接口
+    
+    提供获取操作日志功能的API接口
+    """
+    try:
+        logs = admin_service.get_logs()
+        return jsonify(logs)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/data-quality', methods=['GET'])
+def get_data_quality():
+    """获取数据质量信息接口
+    
+    提供获取数据质量信息功能的API接口
+    """
+    try:
+        data_quality = admin_service.get_data_quality()
+        return jsonify(data_quality)
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500

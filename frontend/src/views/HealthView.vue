@@ -8,18 +8,30 @@
         <el-button size="small" type="primary" @click="openHealthOverview">
           健康概览
         </el-button>
-        <el-button size="small" type="success" @click="openHealthRecommendations" style="margin-left: 10px">
+        <el-button
+          size="small"
+          type="success"
+          @click="openHealthRecommendations"
+          style="margin-left: 10px"
+        >
           健康建议
         </el-button>
       </div>
     </el-header>
     <el-main>
       <!-- 健康状态分布 -->
-      <el-card style="margin-bottom: 20px" @click="openHealthDistributionDetail">
+      <el-card
+        style="margin-bottom: 20px"
+        @click="openHealthDistributionDetail"
+      >
         <template #header>
           <div class="card-header">
             <span>健康状态分布</span>
-            <el-button size="small" type="primary" @click.stop="openHealthDistributionDetail">
+            <el-button
+              size="small"
+              type="primary"
+              @click.stop="openHealthDistributionDetail"
+            >
               查看详情
             </el-button>
           </div>
@@ -32,7 +44,11 @@
         <template #header>
           <div class="card-header">
             <span>按年龄段分析健康状态</span>
-            <el-button size="small" type="primary" @click.stop="openHealthByAgeDetail">
+            <el-button
+              size="small"
+              type="primary"
+              @click.stop="openHealthByAgeDetail"
+            >
               查看详情
             </el-button>
           </div>
@@ -45,7 +61,11 @@
         <template #header>
           <div class="card-header">
             <span>健康状态趋势</span>
-            <el-button size="small" type="primary" @click.stop="openHealthTrendDetail">
+            <el-button
+              size="small"
+              type="primary"
+              @click.stop="openHealthTrendDetail"
+            >
               查看详情
             </el-button>
           </div>
@@ -60,6 +80,7 @@
       v-model="dialogVisible.overview"
       title="健康概览"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>健康状况总览</h3>
@@ -70,7 +91,11 @@
           <el-table-column prop="change" label="变化" width="100" />
           <el-table-column prop="description" label="说明" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="healthOverviewChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="healthOverviewChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -79,6 +104,7 @@
       v-model="dialogVisible.distribution"
       title="健康状态分布详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>健康状态详细分布</h3>
@@ -90,7 +116,11 @@
           <el-table-column prop="female_count" label="女性" width="80" />
           <el-table-column prop="avg_age" label="平均年龄" width="100" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="healthDistributionDetailChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="healthDistributionDetailChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -99,6 +129,7 @@
       v-model="dialogVisible.byAge"
       title="按年龄段分析详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>各年龄段健康状态分析</h3>
@@ -110,7 +141,11 @@
           <el-table-column prop="total" label="总计" width="80" />
           <el-table-column prop="high_risk_rate" label="高危率" width="100" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="healthByAgeDetailChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="healthByAgeDetailChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -119,6 +154,7 @@
       v-model="dialogVisible.trend"
       title="健康状态趋势详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>健康状态变化趋势</h3>
@@ -130,7 +166,11 @@
           <el-table-column prop="high_risk_rate" label="高危率" width="100" />
           <el-table-column prop="change" label="变化" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="healthTrendDetailChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="healthTrendDetailChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -139,6 +179,7 @@
       v-model="dialogVisible.recommendations"
       title="健康建议"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>健康照护建议</h3>
@@ -190,49 +231,15 @@ const dialogVisible = ref({
   distribution: false,
   byAge: false,
   trend: false,
-  recommendations: false
+  recommendations: false,
 });
 
 // 详情数据
-const healthOverviewData = ref([
-  { indicator: "总人数", value: 400, unit: "人", change: "↑ 2%", description: "本月老人总数" },
-  { indicator: "健康良好", value: 280, unit: "人", change: "↑ 1%", description: "健康状态良好的老人" },
-  { indicator: "临界状态", value: 80, unit: "人", change: "→ 0%", description: "健康状态临界的老人" },
-  { indicator: "高危状态", value: 40, unit: "人", change: "↓ 3%", description: "健康状态高危的老人" },
-  { indicator: "平均年龄", value: 75, unit: "岁", change: "↑ 0.5%", description: "所有老人的平均年龄" },
-  { indicator: "男性比例", value: 45, unit: "%", change: "→ 0%", description: "男性老人占比" },
-  { indicator: "女性比例", value: 55, unit: "%", change: "→ 0%", description: "女性老人占比" }
-]);
-
-const healthDistributionDetailData = ref([
-  { status: "良好", count: 280, percentage: "70%", male_count: 126, female_count: 154, avg_age: 72 },
-  { status: "临界", count: 80, percentage: "20%", male_count: 36, female_count: 44, avg_age: 78 },
-  { status: "高危", count: 40, percentage: "10%", male_count: 18, female_count: 22, avg_age: 82 }
-]);
-
-const healthByAgeDetailData = ref([
-  { age_group: "60-69岁", good_count: 90, critical_count: 25, high_risk_count: 5, total: 120, high_risk_rate: "4.2%" },
-  { age_group: "70-79岁", good_count: 120, critical_count: 25, high_risk_count: 5, total: 150, high_risk_rate: "3.3%" },
-  { age_group: "80-89岁", good_count: 60, critical_count: 25, high_risk_count: 5, total: 90, high_risk_rate: "5.6%" },
-  { age_group: "90岁以上", good_count: 10, critical_count: 5, high_risk_count: 25, total: 40, high_risk_rate: "62.5%" }
-]);
-
-const healthTrendDetailData = ref([
-  { date: "2024-01", good_count: 270, critical_count: 85, high_risk_count: 45, high_risk_rate: "11.3%", change: "↑ 0.5%" },
-  { date: "2024-02", good_count: 275, critical_count: 82, high_risk_count: 43, high_risk_rate: "10.8%", change: "↓ 0.5%" },
-  { date: "2024-03", good_count: 280, critical_count: 80, high_risk_count: 40, high_risk_rate: "10.0%", change: "↓ 0.8%" },
-  { date: "2024-04", good_count: 285, critical_count: 78, high_risk_count: 37, high_risk_rate: "9.3%", change: "↓ 0.7%" },
-  { date: "2024-05", good_count: 290, critical_count: 75, high_risk_count: 35, high_risk_rate: "8.8%", change: "↓ 0.5%" }
-]);
-
-const healthRecommendationsData = ref([
-  { category: "饮食", title: "合理膳食", content: "建议每日摄入多样化的食物，包括谷物、蔬菜、水果、蛋白质和奶制品，控制盐和油脂的摄入", target: "所有老人" },
-  { category: "运动", title: "适量运动", content: "建议每天进行30分钟左右的轻度运动，如散步、太极拳等，增强体质", target: "健康良好老人" },
-  { category: "监测", title: "定期体检", content: "建议每半年进行一次全面体检，及时发现和处理健康问题", target: "所有老人" },
-  { category: "照护", title: "专人照护", content: "对于高危老人，建议安排专人照护，定期监测健康状况", target: "高危老人" },
-  { category: "用药", title: "规范用药", content: "建议按照医嘱规范用药，不要自行增减药量", target: "有慢性疾病老人" },
-  { category: "心理", title: "心理健康", content: "建议保持积极乐观的心态，多参加社交活动，避免孤独感", target: "所有老人" }
-]);
+const healthOverviewData = ref([]);
+const healthDistributionDetailData = ref([]);
+const healthByAgeDetailData = ref([]);
+const healthTrendDetailData = ref([]);
+const healthRecommendationsData = ref([]);
 
 // 图表实例
 let healthDistributionChart: echarts.ECharts | null = null;
@@ -260,10 +267,183 @@ const loadData = async () => {
     const healthTrendRes = await axios.get("/api/health/trend");
     healthTrend.value = healthTrendRes.data;
 
+    // 加载健康概览数据
+    await loadHealthOverviewData();
+
+    // 加载健康状态分布详情数据
+    await loadHealthDistributionDetailData();
+
+    // 加载按年龄段分析详情数据
+    await loadHealthByAgeDetailData();
+
+    // 加载健康状态趋势详情数据
+    await loadHealthTrendDetailData();
+
+    // 加载健康建议数据
+    await loadHealthRecommendationsData();
+
     // 初始化图表
     initCharts();
   } catch (error) {
     console.error("加载数据失败:", error);
+  }
+};
+
+// 加载健康概览数据
+const loadHealthOverviewData = async () => {
+  try {
+    const response = await axios.get("/api/data/stats");
+    const stats = response.data;
+
+    healthOverviewData.value = [
+      {
+        indicator: "总人数",
+        value: stats.senior_count || 0,
+        unit: "人",
+        change: "↑ 2%",
+        description: "本月老人总数",
+      },
+      {
+        indicator: "健康良好",
+        value: healthDistribution.value.values?.[0] || 0,
+        unit: "人",
+        change: "↑ 1%",
+        description: "健康状态良好的老人",
+      },
+      {
+        indicator: "临界状态",
+        value: healthDistribution.value.values?.[1] || 0,
+        unit: "人",
+        change: "→ 0%",
+        description: "健康状态临界的老人",
+      },
+      {
+        indicator: "高危状态",
+        value: healthDistribution.value.values?.[2] || 0,
+        unit: "人",
+        change: "↓ 3%",
+        description: "健康状态高危的老人",
+      },
+      {
+        indicator: "平均年龄",
+        value: 75,
+        unit: "岁",
+        change: "↑ 0.5%",
+        description: "所有老人的平均年龄",
+      },
+      {
+        indicator: "男性比例",
+        value: 45,
+        unit: "%",
+        change: "→ 0%",
+        description: "男性老人占比",
+      },
+      {
+        indicator: "女性比例",
+        value: 55,
+        unit: "%",
+        change: "→ 0%",
+        description: "女性老人占比",
+      },
+    ];
+  } catch (error) {
+    console.error("加载健康概览数据失败:", error);
+  }
+};
+
+// 加载健康状态分布详情数据
+const loadHealthDistributionDetailData = async () => {
+  try {
+    const response = await axios.get("/api/health/distribution");
+    const healthData = response.data;
+
+    healthDistributionDetailData.value = [
+      {
+        status: "良好",
+        count: healthData.values?.[0] || 0,
+        percentage: "70%",
+        male_count: 126,
+        female_count: 154,
+        avg_age: 72,
+      },
+      {
+        status: "临界",
+        count: healthData.values?.[1] || 0,
+        percentage: "20%",
+        male_count: 36,
+        female_count: 44,
+        avg_age: 78,
+      },
+      {
+        status: "高危",
+        count: healthData.values?.[2] || 0,
+        percentage: "10%",
+        male_count: 18,
+        female_count: 22,
+        avg_age: 82,
+      },
+    ];
+  } catch (error) {
+    console.error("加载健康状态分布详情数据失败:", error);
+  }
+};
+
+// 加载按年龄段分析详情数据
+const loadHealthByAgeDetailData = async () => {
+  try {
+    const response = await axios.get("/api/health/distribution/age");
+    const ageData = response.data;
+
+    healthByAgeDetailData.value = ageData.age_groups.map(
+      (age_group: string, index: number) => ({
+        age_group,
+        good_count: ageData.datasets?.[0]?.values?.[index] || 0,
+        critical_count: ageData.datasets?.[1]?.values?.[index] || 0,
+        high_risk_count: ageData.datasets?.[2]?.values?.[index] || 0,
+        total:
+          (ageData.datasets?.[0]?.values?.[index] || 0) +
+          (ageData.datasets?.[1]?.values?.[index] || 0) +
+          (ageData.datasets?.[2]?.values?.[index] || 0),
+        high_risk_rate: "5.6%",
+      }),
+    );
+  } catch (error) {
+    console.error("加载按年龄段分析详情数据失败:", error);
+  }
+};
+
+// 加载健康状态趋势详情数据
+const loadHealthTrendDetailData = async () => {
+  try {
+    const response = await axios.get("/api/health/trend");
+    const trendData = response.data;
+
+    healthTrendDetailData.value = trendData.dates.map(
+      (date: string, index: number) => ({
+        date,
+        good_count: trendData.datasets?.[0]?.values?.[index] || 0,
+        critical_count: trendData.datasets?.[1]?.values?.[index] || 0,
+        high_risk_count: trendData.datasets?.[2]?.values?.[index] || 0,
+        high_risk_rate: "10.0%",
+        change: "↓ 0.5%",
+      }),
+    );
+  } catch (error) {
+    console.error("加载健康状态趋势详情数据失败:", error);
+  }
+};
+
+// 加载健康建议数据
+const loadHealthRecommendationsData = async () => {
+  try {
+    const response = await axios.get("/api/health/recommendations");
+    if (response.data.error) {
+      console.error("加载健康建议数据失败:", response.data.error);
+    } else {
+      healthRecommendationsData.value = response.data.data;
+    }
+  } catch (error) {
+    console.error("加载健康建议数据失败:", error);
   }
 };
 
@@ -412,32 +592,32 @@ const initHealthOverviewChart = () => {
     const chart = echarts.init(healthOverviewChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'axis',
+        trigger: "axis",
         axisPointer: {
-          type: 'shadow'
-        }
+          type: "shadow",
+        },
       },
       xAxis: {
-        type: 'category',
-        data: healthOverviewData.value.map(item => item.indicator)
+        type: "category",
+        data: healthOverviewData.value.map((item) => item.indicator),
       },
       yAxis: {
-        type: 'value'
+        type: "value",
       },
       series: [
         {
-          name: '数值',
-          type: 'bar',
-          data: healthOverviewData.value.map(item => item.value),
+          name: "数值",
+          type: "bar",
+          data: healthOverviewData.value.map((item) => item.value),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#83bff6' },
-              { offset: 0.5, color: '#188df0' },
-              { offset: 1, color: '#188df0' }
-            ])
-          }
-        }
-      ]
+              { offset: 0, color: "#83bff6" },
+              { offset: 0.5, color: "#188df0" },
+              { offset: 1, color: "#188df0" },
+            ]),
+          },
+        },
+      ],
     });
   }
 };
@@ -447,31 +627,31 @@ const initHealthDistributionDetailChart = () => {
     const chart = echarts.init(healthDistributionDetailChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'pie',
-        formatter: '{a} <br/>{b}: {c} ({d}%)'
+        trigger: "pie",
+        formatter: "{a} <br/>{b}: {c} ({d}%)",
       },
       legend: {
-        orient: 'vertical',
-        left: 'left'
+        orient: "vertical",
+        left: "left",
       },
       series: [
         {
-          name: '健康状态',
-          type: 'pie',
-          radius: '60%',
-          data: healthDistributionDetailData.value.map(item => ({
+          name: "健康状态",
+          type: "pie",
+          radius: "60%",
+          data: healthDistributionDetailData.value.map((item) => ({
             value: item.count,
-            name: item.status
+            name: item.status,
           })),
           emphasis: {
             itemStyle: {
               shadowBlur: 10,
               shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }
-      ]
+              shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+          },
+        },
+      ],
     });
   }
 };
@@ -481,44 +661,44 @@ const initHealthByAgeDetailChart = () => {
     const chart = echarts.init(healthByAgeDetailChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'axis',
+        trigger: "axis",
         axisPointer: {
-          type: 'shadow'
-        }
+          type: "shadow",
+        },
       },
       legend: {
-        data: ['良好', '临界', '高危']
+        data: ["良好", "临界", "高危"],
       },
       xAxis: {
-        type: 'category',
-        data: healthByAgeDetailData.value.map(item => item.age_group)
+        type: "category",
+        data: healthByAgeDetailData.value.map((item) => item.age_group),
       },
       yAxis: {
-        type: 'value'
+        type: "value",
       },
       series: [
         {
-          name: '良好',
-          type: 'bar',
-          stack: 'total',
-          data: healthByAgeDetailData.value.map(item => item.good_count),
-          itemStyle: { color: '#67C23A' }
+          name: "良好",
+          type: "bar",
+          stack: "total",
+          data: healthByAgeDetailData.value.map((item) => item.good_count),
+          itemStyle: { color: "#67C23A" },
         },
         {
-          name: '临界',
-          type: 'bar',
-          stack: 'total',
-          data: healthByAgeDetailData.value.map(item => item.critical_count),
-          itemStyle: { color: '#E6A23C' }
+          name: "临界",
+          type: "bar",
+          stack: "total",
+          data: healthByAgeDetailData.value.map((item) => item.critical_count),
+          itemStyle: { color: "#E6A23C" },
         },
         {
-          name: '高危',
-          type: 'bar',
-          stack: 'total',
-          data: healthByAgeDetailData.value.map(item => item.high_risk_count),
-          itemStyle: { color: '#F56C6C' }
-        }
-      ]
+          name: "高危",
+          type: "bar",
+          stack: "total",
+          data: healthByAgeDetailData.value.map((item) => item.high_risk_count),
+          itemStyle: { color: "#F56C6C" },
+        },
+      ],
     });
   }
 };
@@ -528,39 +708,39 @@ const initHealthTrendDetailChart = () => {
     const chart = echarts.init(healthTrendDetailChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'axis'
+        trigger: "axis",
       },
       legend: {
-        data: ['良好', '临界', '高危']
+        data: ["良好", "临界", "高危"],
       },
       xAxis: {
-        type: 'category',
+        type: "category",
         boundaryGap: false,
-        data: healthTrendDetailData.value.map(item => item.date)
+        data: healthTrendDetailData.value.map((item) => item.date),
       },
       yAxis: {
-        type: 'value'
+        type: "value",
       },
       series: [
         {
-          name: '良好',
-          type: 'line',
-          data: healthTrendDetailData.value.map(item => item.good_count),
-          itemStyle: { color: '#67C23A' }
+          name: "良好",
+          type: "line",
+          data: healthTrendDetailData.value.map((item) => item.good_count),
+          itemStyle: { color: "#67C23A" },
         },
         {
-          name: '临界',
-          type: 'line',
-          data: healthTrendDetailData.value.map(item => item.critical_count),
-          itemStyle: { color: '#E6A23C' }
+          name: "临界",
+          type: "line",
+          data: healthTrendDetailData.value.map((item) => item.critical_count),
+          itemStyle: { color: "#E6A23C" },
         },
         {
-          name: '高危',
-          type: 'line',
-          data: healthTrendDetailData.value.map(item => item.high_risk_count),
-          itemStyle: { color: '#F56C6C' }
-        }
-      ]
+          name: "高危",
+          type: "line",
+          data: healthTrendDetailData.value.map((item) => item.high_risk_count),
+          itemStyle: { color: "#F56C6C" },
+        },
+      ],
     });
   }
 };
@@ -602,6 +782,7 @@ onMounted(() => {
 }
 
 .header-right {
+  margin-left: 20px;
   display: flex;
   align-items: center;
 }

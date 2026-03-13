@@ -21,6 +21,7 @@ os.makedirs(app.config['MODEL_PATH'], exist_ok=True)
 from app.routes import health, service, prediction, admin, indicator
 from app.routes.data_routes import bp as data_bp
 from app.routes.chat_routes import bp as chat_bp
+from app.routes.common_questions import bp as common_bp
 
 # 注册蓝图
 app.register_blueprint(health.bp)
@@ -30,3 +31,4 @@ app.register_blueprint(admin.bp)
 app.register_blueprint(indicator.bp)
 app.register_blueprint(data_bp)
 app.register_blueprint(chat_bp)
+app.register_blueprint(common_bp)

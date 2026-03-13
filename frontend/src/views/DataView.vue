@@ -231,8 +231,8 @@ const stats = ref({
   communities: 0,
 });
 
-const communities = ref(["社区A", "社区B", "社区C", "社区D", "社区E"]);
-const services = ref(["助餐", "助医", "保洁", "陪护", "康复"]);
+const communities = ref([]);
+const services = ref([]);
 
 // 表格数据
 const seniorsData = ref([]);
@@ -335,12 +335,34 @@ const loadServiceRecords = async () => {
   }
 };
 
+// 加载社区列表
+const loadCommunities = async () => {
+  try {
+    const response = await axios.get("/api/data/communities");
+    communities.value = response.data;
+  } catch (error) {
+    console.error("加载社区列表失败:", error);
+  }
+};
+
+// 加载服务类型列表
+const loadServices = async () => {
+  try {
+    const response = await axios.get("/api/data/services");
+    services.value = response.data;
+  } catch (error) {
+    console.error("加载服务类型列表失败:", error);
+  }
+};
+
 // 刷新数据
 const refreshData = () => {
   loadStats();
   loadSeniorsData();
   loadHealthRecords();
   loadServiceRecords();
+  loadCommunities();
+  loadServices();
 };
 
 // 导出数据
@@ -415,6 +437,8 @@ onMounted(() => {
   loadSeniorsData();
   loadHealthRecords();
   loadServiceRecords();
+  loadCommunities();
+  loadServices();
 });
 </script>
 

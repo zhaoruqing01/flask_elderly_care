@@ -173,6 +173,34 @@ def chat():
         print(f"聊天处理失败: {e}")
         return jsonify({'error': '聊天处理失败'}), 500
 
+@bp.route('/initial', methods=['GET'])
+def get_initial_message():
+    """获取初始聊天消息"""
+    try:
+        # 生成初始问候语
+        answer = get_greeting_answer()
+        return jsonify({'answer': answer})
+    except Exception as e:
+        print(f"获取初始消息失败: {e}")
+        return jsonify({'error': '获取初始消息失败'}), 500
+
+@bp.route('/common-questions', methods=['GET'])
+def get_common_questions():
+    """获取常见问题列表"""
+    try:
+        # 常见问题列表
+        common_questions = [
+            "某老人的最大需求是什么？",
+            "如何提高老人的服务满意度？",
+            "哪些社区的服务需求最高？",
+            "老人的健康状况如何？",
+            "如何优化服务资源配置？"
+        ]
+        return jsonify(common_questions)
+    except Exception as e:
+        print(f"获取常见问题失败: {e}")
+        return jsonify({'error': '获取常见问题失败'}), 500
+
 def get_max_demand_answer():
     """获取最大需求的回答"""
     try:

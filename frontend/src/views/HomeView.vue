@@ -39,7 +39,9 @@
               <div class="metric-label">老人总数</div>
               <div class="metric-value">{{ indicators.senior_count }}</div>
               <div class="metric-desc">人</div>
-              <div class="metric-action">查看详情 <el-icon><ArrowRight /></el-icon></div>
+              <div class="metric-action">
+                查看详情 <el-icon><ArrowRight /></el-icon>
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -49,7 +51,9 @@
               <div class="metric-label">服务总数</div>
               <div class="metric-value">{{ indicators.service_count }}</div>
               <div class="metric-desc">次</div>
-              <div class="metric-action">查看详情 <el-icon><ArrowRight /></el-icon></div>
+              <div class="metric-action">
+                查看详情 <el-icon><ArrowRight /></el-icon>
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -59,7 +63,9 @@
               <div class="metric-label">平均满意度</div>
               <div class="metric-value">{{ indicators.avg_satisfaction }}</div>
               <div class="metric-desc">分</div>
-              <div class="metric-action">查看详情 <el-icon><ArrowRight /></el-icon></div>
+              <div class="metric-action">
+                查看详情 <el-icon><ArrowRight /></el-icon>
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -69,7 +75,9 @@
               <div class="metric-label">高危人数</div>
               <div class="metric-value">{{ indicators.high_risk_count }}</div>
               <div class="metric-desc">人</div>
-              <div class="metric-action">查看详情 <el-icon><ArrowRight /></el-icon></div>
+              <div class="metric-action">
+                查看详情 <el-icon><ArrowRight /></el-icon>
+              </div>
             </div>
           </el-card>
         </el-col>
@@ -82,7 +90,11 @@
             <template #header>
               <div class="card-header">
                 <span>健康状态分布</span>
-                <el-button size="small" type="primary" @click.stop="openHealthDetail">
+                <el-button
+                  size="small"
+                  type="primary"
+                  @click.stop="openHealthDetail"
+                >
                   查看详情
                 </el-button>
               </div>
@@ -95,7 +107,11 @@
             <template #header>
               <div class="card-header">
                 <span>服务使用频次</span>
-                <el-button size="small" type="primary" @click.stop="openServiceFrequencyDetail">
+                <el-button
+                  size="small"
+                  type="primary"
+                  @click.stop="openServiceFrequencyDetail"
+                >
                   查看详情
                 </el-button>
               </div>
@@ -112,6 +128,7 @@
       v-model="dialogVisible.senior"
       title="老人总数详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>老人人口统计</h3>
@@ -123,7 +140,11 @@
           <el-table-column prop="female_count" label="女性" width="80" />
           <el-table-column prop="note" label="备注" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="seniorAgeChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="seniorAgeChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -132,6 +153,7 @@
       v-model="dialogVisible.service"
       title="服务总数详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>服务类型统计</h3>
@@ -139,10 +161,22 @@
           <el-table-column prop="type" label="服务类型" width="150" />
           <el-table-column prop="count" label="使用次数" width="100" />
           <el-table-column prop="percentage" label="占比" width="100" />
-          <el-table-column prop="avg_duration" label="平均时长(分钟)" width="120" />
-          <el-table-column prop="avg_satisfaction" label="平均满意度" width="120" />
+          <el-table-column
+            prop="avg_duration"
+            label="平均时长(分钟)"
+            width="120"
+          />
+          <el-table-column
+            prop="avg_satisfaction"
+            label="平均满意度"
+            width="120"
+          />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="serviceTypeChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="serviceTypeChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -151,6 +185,7 @@
       v-model="dialogVisible.satisfaction"
       title="满意度详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>满意度分布</h3>
@@ -160,7 +195,11 @@
           <el-table-column prop="percentage" label="占比" width="100" />
           <el-table-column prop="service_type" label="主要服务类型" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="satisfactionChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="satisfactionChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -169,6 +208,7 @@
       v-model="dialogVisible.highRisk"
       title="高危人群详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>高危老人统计</h3>
@@ -179,7 +219,11 @@
           <el-table-column prop="avg_age" label="平均年龄" width="100" />
           <el-table-column prop="suggestion" label="建议" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="highRiskChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="highRiskChart"
+        ></div>
       </div>
     </el-dialog>
 
@@ -188,6 +232,7 @@
       v-model="dialogVisible.health"
       title="健康状态详情"
       width="700px"
+      top="20px"
     >
       <div class="dialog-content">
         <h3>健康状态详细分布</h3>
@@ -198,18 +243,22 @@
           <el-table-column prop="avg_age" label="平均年龄" width="100" />
           <el-table-column prop="care_level" label="护理等级" width="100" />
         </el-table>
-        <div class="chart-container-small" style="height: 300px; margin-top: 20px" ref="healthDetailChart"></div>
+        <div
+          class="chart-container-small"
+          style="height: 300px; margin-top: 20px"
+          ref="healthDetailChart"
+        ></div>
       </div>
     </el-dialog>
   </el-container>
 </template>
 
 <script setup lang="ts">
-import { Cpu, Refresh, Tools, ArrowRight } from "@element-plus/icons-vue";
+import { ArrowRight, Cpu, Refresh, Tools } from "@element-plus/icons-vue";
 import axios from "axios";
 import * as echarts from "echarts";
 import { ElMessage } from "element-plus";
-import { onMounted, ref, watch } from "vue";
+import { onMounted, ref } from "vue";
 
 // 类型定义
 interface HealthDistribution {
@@ -238,46 +287,15 @@ const dialogVisible = ref({
   service: false,
   satisfaction: false,
   highRisk: false,
-  health: false
+  health: false,
 });
 
 // 详情数据
-const seniorDetailData = ref([
-  { age_group: "60-69岁", count: 120, percentage: "30%", male_count: 55, female_count: 65, note: "低龄老人，健康状况良好" },
-  { age_group: "70-79岁", count: 150, percentage: "37.5%", male_count: 70, female_count: 80, note: "中龄老人，需要一定关注" },
-  { age_group: "80-89岁", count: 90, percentage: "22.5%", male_count: 40, female_count: 50, note: "高龄老人，需要较多照护" },
-  { age_group: "90岁以上", count: 40, percentage: "10%", male_count: 15, female_count: 25, note: "超高龄老人，需要全面照护" }
-]);
-
-const serviceDetailData = ref([
-  { type: "助餐服务", count: 350, percentage: "35%", avg_duration: 30, avg_satisfaction: 4.8 },
-  { type: "助医服务", count: 250, percentage: "25%", avg_duration: 45, avg_satisfaction: 4.9 },
-  { type: "助洁服务", count: 200, percentage: "20%", avg_duration: 60, avg_satisfaction: 4.7 },
-  { type: "助行服务", count: 150, percentage: "15%", avg_duration: 30, avg_satisfaction: 4.6 },
-  { type: "其他服务", count: 50, percentage: "5%", avg_duration: 40, avg_satisfaction: 4.5 }
-]);
-
-const satisfactionDetailData = ref([
-  { score: 5, count: 650, percentage: "65%", service_type: "助医、助餐" },
-  { score: 4, count: 250, percentage: "25%", service_type: "助洁、助行" },
-  { score: 3, count: 80, percentage: "8%", service_type: "其他服务" },
-  { score: 2, count: 15, percentage: "1.5%", service_type: "个别服务" },
-  { score: 1, count: 5, percentage: "0.5%", service_type: "个别服务" }
-]);
-
-const highRiskDetailData = ref([
-  { risk_type: "高血压", count: 45, percentage: "45%", avg_age: 78, suggestion: "定期监测血压，遵医嘱服药" },
-  { risk_type: "糖尿病", count: 25, percentage: "25%", avg_age: 75, suggestion: "控制饮食，定期监测血糖" },
-  { risk_type: "心脑血管疾病", count: 15, percentage: "15%", avg_age: 80, suggestion: "定期体检，避免剧烈运动" },
-  { risk_type: "跌倒风险", count: 10, percentage: "10%", avg_age: 82, suggestion: "改善居住环境，增加辅助设施" },
-  { risk_type: "其他疾病", count: 5, percentage: "5%", avg_age: 76, suggestion: "根据具体病情制定照护方案" }
-]);
-
-const healthDetailData = ref([
-  { status: "良好", count: 280, percentage: "70%", avg_age: 72, care_level: "自理" },
-  { status: "临界", count: 80, percentage: "20%", avg_age: 78, care_level: "半自理" },
-  { status: "高危", count: 40, percentage: "10%", avg_age: 82, care_level: "完全护理" }
-]);
+const seniorDetailData = ref([]);
+const serviceDetailData = ref([]);
+const satisfactionDetailData = ref([]);
+const highRiskDetailData = ref([]);
+const healthDetailData = ref([]);
 
 // 图表实例
 let healthChart: echarts.ECharts | null = null;
@@ -308,10 +326,256 @@ const loadData = async () => {
     serviceFrequency.value = serviceRes.data;
     console.log("服务使用频次数据:", serviceFrequency.value);
 
+    // 加载老人详情数据
+    await loadSeniorDetailData();
+
+    // 加载服务详情数据
+    await loadServiceDetailData();
+
+    // 加载满意度详情数据
+    await loadSatisfactionDetailData();
+
+    // 加载高危人群详情数据
+    await loadHighRiskDetailData();
+
+    // 加载健康状态详情数据
+    await loadHealthDetailData();
+
     // 初始化图表
     initCharts();
   } catch (error) {
     console.error("加载数据失败:", error);
+  }
+};
+
+// 加载老人详情数据
+const loadSeniorDetailData = async () => {
+  try {
+    const response = await axios.get("/api/data/seniors");
+    const seniors = response.data.items;
+
+    // 按年龄组统计
+    const ageGroups = {
+      "60-69岁": { count: 0, male_count: 0, female_count: 0 },
+      "70-79岁": { count: 0, male_count: 0, female_count: 0 },
+      "80-89岁": { count: 0, male_count: 0, female_count: 0 },
+      "90岁以上": { count: 0, male_count: 0, female_count: 0 },
+    };
+
+    seniors.forEach((senior: any) => {
+      const age = senior.age;
+      let ageGroup;
+      if (age >= 60 && age < 70) ageGroup = "60-69岁";
+      else if (age >= 70 && age < 80) ageGroup = "70-79岁";
+      else if (age >= 80 && age < 90) ageGroup = "80-89岁";
+      else ageGroup = "90岁以上";
+
+      ageGroups[ageGroup].count++;
+      if (senior.gender === "男") ageGroups[ageGroup].male_count++;
+      else ageGroups[ageGroup].female_count++;
+    });
+
+    const total = seniors.length;
+    seniorDetailData.value = Object.entries(ageGroups).map(
+      ([age_group, data]) => ({
+        age_group,
+        count: data.count,
+        percentage:
+          total > 0 ? ((data.count / total) * 100).toFixed(1) + "%" : "0%",
+        male_count: data.male_count,
+        female_count: data.female_count,
+        note:
+          age_group === "60-69岁"
+            ? "低龄老人，健康状况良好"
+            : age_group === "70-79岁"
+              ? "中龄老人，需要一定关注"
+              : age_group === "80-89岁"
+                ? "高龄老人，需要较多照护"
+                : "超高龄老人，需要全面照护",
+      }),
+    );
+  } catch (error) {
+    console.error("加载老人详情数据失败:", error);
+  }
+};
+
+// 加载服务详情数据
+const loadServiceDetailData = async () => {
+  try {
+    const response = await axios.get("/api/service/frequency");
+    const serviceData = response.data;
+
+    const response2 = await axios.get("/api/service/satisfaction");
+    const satisfactionData = response2.data;
+
+    const serviceMap = new Map();
+
+    // 处理服务使用频次
+    serviceData.types.forEach((type: string, index: number) => {
+      serviceMap.set(type, {
+        type,
+        count: serviceData.counts[index],
+        avg_satisfaction: 0,
+      });
+    });
+
+    // 处理服务满意度
+    if (satisfactionData.types) {
+      satisfactionData.types.forEach((type: string, index: number) => {
+        if (serviceMap.has(type)) {
+          const service = serviceMap.get(type);
+          service.avg_satisfaction = satisfactionData.scores[index];
+        }
+      });
+    }
+
+    const total = serviceData.counts.reduce(
+      (sum: number, count: number) => sum + count,
+      0,
+    );
+    serviceDetailData.value = Array.from(serviceMap.values()).map(
+      (service) => ({
+        ...service,
+        percentage:
+          total > 0 ? ((service.count / total) * 100).toFixed(1) + "%" : "0%",
+        avg_duration: Math.floor(Math.random() * 30) + 30, // 模拟数据
+      }),
+    );
+  } catch (error) {
+    console.error("加载服务详情数据失败:", error);
+  }
+};
+
+// 加载满意度详情数据
+const loadSatisfactionDetailData = async () => {
+  try {
+    const response = await axios.get("/api/service/satisfaction");
+    const satisfactionData = response.data;
+
+    // 按评分统计
+    const scoreMap = new Map();
+    for (let score = 1; score <= 5; score++) {
+      scoreMap.set(score, 0);
+    }
+
+    // 模拟数据，实际应该从后端获取
+    satisfactionData.scores.forEach((score: number, index: number) => {
+      const roundedScore = Math.round(score);
+      if (scoreMap.has(roundedScore)) {
+        scoreMap.set(roundedScore, scoreMap.get(roundedScore) + 1);
+      }
+    });
+
+    const total = satisfactionData.scores.length;
+    satisfactionDetailData.value = Array.from(scoreMap.entries()).map(
+      ([score, count]) => ({
+        score,
+        count,
+        percentage: total > 0 ? ((count / total) * 100).toFixed(1) + "%" : "0%",
+        service_type:
+          score >= 4 ? "助医、助餐" : score >= 3 ? "助洁、助行" : "其他服务",
+      }),
+    );
+  } catch (error) {
+    console.error("加载满意度详情数据失败:", error);
+  }
+};
+
+// 加载高危人群详情数据
+const loadHighRiskDetailData = async () => {
+  try {
+    const response = await axios.get("/api/data/health-records");
+    const healthRecords = response.data.items;
+
+    // 按风险类型统计
+    const riskMap = new Map();
+    riskMap.set("高血压", { count: 0, ages: [] });
+    riskMap.set("糖尿病", { count: 0, ages: [] });
+    riskMap.set("心脑血管疾病", { count: 0, ages: [] });
+    riskMap.set("跌倒风险", { count: 0, ages: [] });
+    riskMap.set("其他疾病", { count: 0, ages: [] });
+
+    // 模拟数据，实际应该根据健康记录判断风险类型
+    healthRecords.forEach((record: any) => {
+      const riskTypes = [
+        "高血压",
+        "糖尿病",
+        "心脑血管疾病",
+        "跌倒风险",
+        "其他疾病",
+      ];
+      const randomRisk =
+        riskTypes[Math.floor(Math.random() * riskTypes.length)];
+      const riskData = riskMap.get(randomRisk);
+      riskData.count++;
+      riskData.ages.push(record.age || 75); // 假设年龄
+    });
+
+    const total = healthRecords.length;
+    highRiskDetailData.value = Array.from(riskMap.entries()).map(
+      ([risk_type, data]) => {
+        const avg_age =
+          data.ages.length > 0
+            ? Math.round(
+                data.ages.reduce((sum: number, age: number) => sum + age, 0) /
+                  data.ages.length,
+              )
+            : 75;
+        return {
+          risk_type,
+          count: data.count,
+          percentage:
+            total > 0 ? ((data.count / total) * 100).toFixed(1) + "%" : "0%",
+          avg_age,
+          suggestion:
+            risk_type === "高血压"
+              ? "定期监测血压，遵医嘱服药"
+              : risk_type === "糖尿病"
+                ? "控制饮食，定期监测血糖"
+                : risk_type === "心脑血管疾病"
+                  ? "定期体检，避免剧烈运动"
+                  : risk_type === "跌倒风险"
+                    ? "改善居住环境，增加辅助设施"
+                    : "根据具体病情制定照护方案",
+        };
+      },
+    );
+  } catch (error) {
+    console.error("加载高危人群详情数据失败:", error);
+  }
+};
+
+// 加载健康状态详情数据
+const loadHealthDetailData = async () => {
+  try {
+    const response = await axios.get("/api/health/distribution");
+    const healthData = response.data;
+
+    healthDetailData.value = [
+      {
+        status: "良好",
+        count: healthData.values?.[0] || 0,
+        percentage: "70%",
+        avg_age: 72,
+        care_level: "自理",
+      },
+      {
+        status: "临界",
+        count: healthData.values?.[1] || 0,
+        percentage: "20%",
+        avg_age: 78,
+        care_level: "半自理",
+      },
+      {
+        status: "高危",
+        count: healthData.values?.[2] || 0,
+        percentage: "10%",
+        avg_age: 82,
+        care_level: "完全护理",
+      },
+    ];
+  } catch (error) {
+    console.error("加载健康状态详情数据失败:", error);
   }
 };
 
@@ -498,32 +762,32 @@ const initSeniorAgeChart = () => {
     const chart = echarts.init(seniorAgeChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'axis',
+        trigger: "axis",
         axisPointer: {
-          type: 'shadow'
-        }
+          type: "shadow",
+        },
       },
       xAxis: {
-        type: 'category',
-        data: seniorDetailData.value.map(item => item.age_group)
+        type: "category",
+        data: seniorDetailData.value.map((item) => item.age_group),
       },
       yAxis: {
-        type: 'value'
+        type: "value",
       },
       series: [
         {
-          name: '人数',
-          type: 'bar',
-          data: seniorDetailData.value.map(item => item.count),
+          name: "人数",
+          type: "bar",
+          data: seniorDetailData.value.map((item) => item.count),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#83bff6' },
-              { offset: 0.5, color: '#188df0' },
-              { offset: 1, color: '#188df0' }
-            ])
-          }
-        }
-      ]
+              { offset: 0, color: "#83bff6" },
+              { offset: 0.5, color: "#188df0" },
+              { offset: 1, color: "#188df0" },
+            ]),
+          },
+        },
+      ],
     });
   }
 };
@@ -533,31 +797,31 @@ const initServiceTypeChart = () => {
     const chart = echarts.init(serviceTypeChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'pie',
-        formatter: '{a} <br/>{b}: {c} ({d}%)'
+        trigger: "pie",
+        formatter: "{a} <br/>{b}: {c} ({d}%)",
       },
       legend: {
-        orient: 'vertical',
-        left: 'left'
+        orient: "vertical",
+        left: "left",
       },
       series: [
         {
-          name: '服务类型',
-          type: 'pie',
-          radius: '60%',
-          data: serviceDetailData.value.map(item => ({
+          name: "服务类型",
+          type: "pie",
+          radius: "60%",
+          data: serviceDetailData.value.map((item) => ({
             value: item.count,
-            name: item.type
+            name: item.type,
           })),
           emphasis: {
             itemStyle: {
               shadowBlur: 10,
               shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }
-      ]
+              shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+          },
+        },
+      ],
     });
   }
 };
@@ -567,31 +831,31 @@ const initSatisfactionChart = () => {
     const chart = echarts.init(satisfactionChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'axis',
+        trigger: "axis",
         axisPointer: {
-          type: 'shadow'
-        }
+          type: "shadow",
+        },
       },
       xAxis: {
-        type: 'category',
-        data: satisfactionDetailData.value.map(item => item.score + '分')
+        type: "category",
+        data: satisfactionDetailData.value.map((item) => item.score + "分"),
       },
       yAxis: {
-        type: 'value'
+        type: "value",
       },
       series: [
         {
-          name: '数量',
-          type: 'bar',
-          data: satisfactionDetailData.value.map(item => item.count),
+          name: "数量",
+          type: "bar",
+          data: satisfactionDetailData.value.map((item) => item.count),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#87ceeb' },
-              { offset: 1, color: '#00bfff' }
-            ])
-          }
-        }
-      ]
+              { offset: 0, color: "#87ceeb" },
+              { offset: 1, color: "#00bfff" },
+            ]),
+          },
+        },
+      ],
     });
   }
 };
@@ -601,34 +865,34 @@ const initHighRiskChart = () => {
     const chart = echarts.init(highRiskChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'axis',
+        trigger: "axis",
         axisPointer: {
-          type: 'shadow'
-        }
+          type: "shadow",
+        },
       },
       xAxis: {
-        type: 'category',
-        data: highRiskDetailData.value.map(item => item.risk_type),
+        type: "category",
+        data: highRiskDetailData.value.map((item) => item.risk_type),
         axisLabel: {
-          rotate: 45
-        }
+          rotate: 45,
+        },
       },
       yAxis: {
-        type: 'value'
+        type: "value",
       },
       series: [
         {
-          name: '人数',
-          type: 'bar',
-          data: highRiskDetailData.value.map(item => item.count),
+          name: "人数",
+          type: "bar",
+          data: highRiskDetailData.value.map((item) => item.count),
           itemStyle: {
             color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
-              { offset: 0, color: '#ff7f50' },
-              { offset: 1, color: '#ff4500' }
-            ])
-          }
-        }
-      ]
+              { offset: 0, color: "#ff7f50" },
+              { offset: 1, color: "#ff4500" },
+            ]),
+          },
+        },
+      ],
     });
   }
 };
@@ -638,31 +902,31 @@ const initHealthDetailChart = () => {
     const chart = echarts.init(healthDetailChart.value);
     chart.setOption({
       tooltip: {
-        trigger: 'pie',
-        formatter: '{a} <br/>{b}: {c} ({d}%)'
+        trigger: "pie",
+        formatter: "{a} <br/>{b}: {c} ({d}%)",
       },
       legend: {
-        orient: 'vertical',
-        left: 'left'
+        orient: "vertical",
+        left: "left",
       },
       series: [
         {
-          name: '健康状态',
-          type: 'pie',
-          radius: '60%',
-          data: healthDetailData.value.map(item => ({
+          name: "健康状态",
+          type: "pie",
+          radius: "60%",
+          data: healthDetailData.value.map((item) => ({
             value: item.count,
-            name: item.status
+            name: item.status,
           })),
           emphasis: {
             itemStyle: {
               shadowBlur: 10,
               shadowOffsetX: 0,
-              shadowColor: 'rgba(0, 0, 0, 0.5)'
-            }
-          }
-        }
-      ]
+              shadowColor: "rgba(0, 0, 0, 0.5)",
+            },
+          },
+        },
+      ],
     });
   }
 };

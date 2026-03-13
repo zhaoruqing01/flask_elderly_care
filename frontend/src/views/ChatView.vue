@@ -21,14 +21,19 @@
           </div>
         </template>
         <div class="chat-messages">
-          <div 
-            v-for="(message, index) in messages" 
-            :key="index" 
-            :class="['message', message.sender === 'user' ? 'user-message' : 'ai-message']"
+          <div
+            v-for="(message, index) in messages"
+            :key="index"
+            :class="[
+              'message',
+              message.sender === 'user' ? 'user-message' : 'ai-message',
+            ]"
           >
             <div class="message-content">
               <div class="message-header">
-                <span class="message-sender">{{ message.sender === 'user' ? '您' : 'AI助手' }}</span>
+                <span class="message-sender">{{
+                  message.sender === "user" ? "您" : "AI助手"
+                }}</span>
                 <span class="message-time">{{ message.timestamp }}</span>
               </div>
               <div class="message-text">{{ message.text }}</div>
@@ -47,23 +52,28 @@
             placeholder="请输入您的问题，例如：某老人的最大需求是什么？"
             @keyup.enter.ctrl="sendMessage"
           />
-          <div class="input-actions">
-            <el-button type="primary" @click="sendMessage" :loading="isLoading" icon="Send">
-              发送
-            </el-button>
-          </div>
+          <!-- <div class="input-actions"> -->
+          <el-button
+            type="primary"
+            class="sub-btn"
+            @click="sendMessage"
+            :loading="isLoading"
+          >
+            发送
+          </el-button>
+          <!-- </div> -->
         </div>
       </el-card>
-      <el-card style="margin-top: 20px;">
+      <el-card style="margin-top: 20px">
         <template #header>
           <div class="card-header">
             <span>常见问题</span>
           </div>
         </template>
         <div class="common-questions">
-          <el-tag 
-            v-for="(question, index) in commonQuestions" 
-            :key="index" 
+          <el-tag
+            v-for="(question, index) in commonQuestions"
+            :key="index"
             class="common-question-tag"
             @click="selectQuestion(question)"
           >
@@ -76,103 +86,146 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
-import axios from 'axios'
-import { ElMessage } from 'element-plus'
-import { Loading } from '@element-plus/icons-vue'
+import { Loading } from "@element-plus/icons-vue";
+import axios from "axios";
+import { ElMessage } from "element-plus";
+import { onMounted, ref } from "vue";
 
 // 响应式数据
-const messages = ref([
-  {
-    sender: 'ai',
-    text: '您好！我是养老服务智能助手，有什么可以帮您的吗？',
-    timestamp: new Date().toLocaleTimeString()
-  }
-])
-const inputMessage = ref('')
-const isLoading = ref(false)
-const commonQuestions = [
-  '某老人的最大需求是什么？',
-  '如何提高老人的服务满意度？',
-  '哪些社区的服务需求最高？',
-  '老人的健康状况如何？',
-  '如何优化服务资源配置？'
-]
+const messages = ref([]);
+const inputMessage = ref("");
+const isLoading = ref(false);
+const commonQuestions = ref([]);
 
 // 发送消息
 const sendMessage = async () => {
   if (!inputMessage.value.trim()) {
-    ElMessage.warning('请输入问题')
-    return
+    ElMessage.warning("请输入问题");
+    return;
   }
-  
+
   // 添加用户消息
   const userMessage = {
-    sender: 'user',
+    sender: "user",
     text: inputMessage.value.trim(),
-    timestamp: new Date().toLocaleTimeString()
-  }
-  messages.value.push(userMessage)
-  
+    timestamp: new Date().toLocaleTimeString(),
+  };
+  messages.value.push(userMessage);
+
   // 清空输入框
-  const question = inputMessage.value.trim()
-  inputMessage.value = ''
-  
+  const question = inputMessage.value.trim();
+  inputMessage.value = "";
+
   // 显示加载状态
-  isLoading.value = true
-  
+  isLoading.value = true;
+
   try {
     // 调用后端API
-    const response = await axios.post('/api/chat', {
-      question: question
-    })
-    
+    const response = await axios.post("/api/chat", {
+      question: question,
+    });
+
     // 添加AI回复
     const aiMessage = {
-      sender: 'ai',
+      sender: "ai",
       text: response.data.answer,
-      timestamp: new Date().toLocaleTimeString()
-    }
-    messages.value.push(aiMessage)
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    messages.value.push(aiMessage);
   } catch (error) {
-    console.error('发送消息失败:', error)
-    ElMessage.error('发送消息失败，请稍后重试')
-    
+    console.error("发送消息失败:", error);
+    ElMessage.error("发送消息失败，请稍后重试");
+
     // 添加错误消息
     const errorMessage = {
-      sender: 'ai',
-      text: '抱歉，我暂时无法回答您的问题，请稍后重试。',
-      timestamp: new Date().toLocaleTimeString()
-    }
-    messages.value.push(errorMessage)
+      sender: "ai",
+      text: "抱歉，我暂时无法回答您的问题，请稍后重试。",
+      timestamp: new Date().toLocaleTimeString(),
+    };
+    messages.value.push(errorMessage);
   } finally {
     // 隐藏加载状态
-    isLoading.value = false
+    isLoading.value = false;
   }
-}
+};
 
 // 选择常见问题
 const selectQuestion = (question: string) => {
-  inputMessage.value = question
-  sendMessage()
-}
+  inputMessage.value = question;
+  sendMessage();
+};
 
 // 清空聊天
 const clearChat = () => {
-  messages.value = [
-    {
-      sender: 'ai',
-      text: '您好！我是养老服务智能助手，有什么可以帮您的吗？',
-      timestamp: new Date().toLocaleTimeString()
+  messages.value = [];
+  inputMessage.value = "";
+  // 重新加载初始化消息
+  loadInitialMessage();
+};
+
+// 加载常见问题
+const loadCommonQuestions = async () => {
+  try {
+    const response = await axios.get("/api/common-questions");
+    if (response.data.error) {
+      ElMessage.error("加载失败：" + response.data.error);
+    } else {
+      commonQuestions.value = response.data.data;
     }
-  ]
-  inputMessage.value = ''
-}
+  } catch (error) {
+    ElMessage.error("请求失败：" + error);
+    //  fallback to default questions if API fails
+    commonQuestions.value = [
+      "某老人的最大需求是什么？",
+      "如何提高老人的服务满意度？",
+      "哪些社区的服务需求最高？",
+      "老人的健康状况如何？",
+      "如何优化服务资源配置？",
+    ];
+  }
+};
+
+// 加载初始化消息
+const loadInitialMessage = async () => {
+  try {
+    const response = await axios.get("/api/chat/initial");
+    if (response.data.error) {
+      ElMessage.error("加载失败：" + response.data.error);
+      // fallback to default message if API fails
+      messages.value = [
+        {
+          sender: "ai",
+          text: "您好！我是养老服务智能助手，有什么可以帮您的吗？",
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ];
+    } else {
+      messages.value = [
+        {
+          sender: "ai",
+          text: response.data.answer,
+          timestamp: new Date().toLocaleTimeString(),
+        },
+      ];
+    }
+  } catch (error) {
+    ElMessage.error("请求失败：" + error);
+    // fallback to default message if API fails
+    messages.value = [
+      {
+        sender: "ai",
+        text: "您好！我是养老服务智能助手，有什么可以帮您的吗？",
+        timestamp: new Date().toLocaleTimeString(),
+      },
+    ];
+  }
+};
 
 // 页面加载时初始化
 onMounted(() => {
-  // 可以在这里添加初始化逻辑
-})
+  loadCommonQuestions();
+  loadInitialMessage();
+});
 </script>
 
 <style scoped>
@@ -194,7 +247,7 @@ onMounted(() => {
 .header-left h2 {
   margin: 0;
   font-size: 1.2rem;
-  color: #0066CC;
+  color: #0066cc;
 }
 
 .header-right {
@@ -215,7 +268,7 @@ onMounted(() => {
 }
 
 .chat-messages {
-  height: 500px;
+  height: 190px;
   overflow-y: auto;
   padding: 20px;
   border-bottom: 1px solid #eaeef1;
@@ -244,7 +297,7 @@ onMounted(() => {
 
 .user-message .message-content {
   background-color: #e8f3ff;
-  color: #0066CC;
+  color: #0066cc;
   border-bottom-right-radius: 4px;
 }
 
@@ -281,13 +334,14 @@ onMounted(() => {
 
 .chat-input {
   display: flex;
-  flex-direction: column;
+  /* flex-direction: column; */
   gap: 10px;
 }
 
-.input-actions {
-  display: flex;
-  justify-content: flex-end;
+.sub-btn {
+  border-radius: 10px;
+  width: 100px;
+  height: 70px;
 }
 
 .common-questions {
@@ -304,7 +358,7 @@ onMounted(() => {
 
 .common-question-tag:hover {
   background-color: #e8f3ff;
-  color: #0066CC;
+  color: #0066cc;
 }
 
 /* 响应式调整 */
@@ -314,18 +368,18 @@ onMounted(() => {
     height: auto;
     padding: 10px;
   }
-  
+
   .header-left,
   .header-right {
     width: 100%;
     text-align: center;
     margin-bottom: 10px;
   }
-  
+
   .chat-messages {
     height: 300px;
   }
-  
+
   .message-content {
     max-width: 90%;
   }

@@ -108,7 +108,7 @@ class ServiceService:
         
         return {
             'types': service_types,
-            'satisfaction': [satisfaction[service] for service in service_types]
+            'scores': [satisfaction[service] for service in service_types]
         }
     
     def get_service_trend(self):

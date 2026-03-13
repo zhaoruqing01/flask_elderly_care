@@ -75,11 +75,46 @@ const activeMenu = computed(() => {
 });
 </script>
 
+<style>
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+  overflow: hidden;
+}
+
+/* 全局美化滚动条 */
+::-webkit-scrollbar {
+  width: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 4px;
+  transition: background 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #a1a1a1;
+}
+
+::-webkit-scrollbar-corner {
+  background: #f1f1f1;
+}
+</style>
+
 <style scoped>
 .app-container {
   height: 100vh;
   background-color: #f5f7fa;
   display: flex;
+  overflow: hidden;
 }
 
 .sidebar {
@@ -90,8 +125,10 @@ const activeMenu = computed(() => {
 
 .el-main {
   flex: 1;
-  padding: 20px;
-  overflow: auto;
+  padding: 0px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  box-sizing: border-box;
 }
 
 .sidebar-header {
@@ -113,7 +150,7 @@ const activeMenu = computed(() => {
 }
 
 .sidebar-menu {
-  margin-top: 20px;
+  /* margin-top: 20px; */
   border-right: none;
 }
 

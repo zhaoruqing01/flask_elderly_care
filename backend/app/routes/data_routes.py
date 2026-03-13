@@ -26,19 +26,19 @@ def get_data_stats():
         cursor = conn.cursor()
         
         # 统计老人总数
-        cursor.execute('SELECT COUNT(*) FROM seniors')
+        cursor.execute('SELECT COUNT(*) FROM senior')
         senior_count = cursor.fetchone()[0]
         
         # 统计健康记录数
-        cursor.execute('SELECT COUNT(*) FROM health_records')
+        cursor.execute('SELECT COUNT(*) FROM health_record')
         health_records = cursor.fetchone()[0]
         
         # 统计服务记录数
-        cursor.execute('SELECT COUNT(*) FROM service_records')
+        cursor.execute('SELECT COUNT(*) FROM service_log')
         service_logs = cursor.fetchone()[0]
         
         # 统计社区数量
-        cursor.execute('SELECT COUNT(DISTINCT community_id) FROM seniors')
+        cursor.execute('SELECT COUNT(DISTINCT community_id) FROM senior')
         communities = cursor.fetchone()[0]
         
         conn.close()
@@ -66,7 +66,7 @@ def get_seniors():
         cursor = conn.cursor()
         
         # 构建查询
-        query = 'SELECT * FROM seniors'
+        query = 'SELECT * FROM senior'
         params = []
         
         if community:
@@ -74,7 +74,7 @@ def get_seniors():
             params.append(community)
         
         # 获取总数
-        count_query = 'SELECT COUNT(*) FROM seniors'
+        count_query = 'SELECT COUNT(*) FROM senior'
         if community:
             count_query += ' WHERE community_id = ?'
         cursor.execute(count_query, params)
@@ -112,7 +112,7 @@ def get_health_records():
         cursor = conn.cursor()
         
         # 构建查询
-        query = 'SELECT * FROM health_records'
+        query = 'SELECT * FROM health_record'
         params = []
         
         if start_date and end_date:
@@ -126,7 +126,7 @@ def get_health_records():
             params.append(end_date)
         
         # 获取总数
-        count_query = 'SELECT COUNT(*) FROM health_records'
+        count_query = 'SELECT COUNT(*) FROM health_record'
         if start_date and end_date:
             count_query += ' WHERE date BETWEEN ? AND ?'
         elif start_date:
@@ -167,7 +167,7 @@ def get_service_records():
         cursor = conn.cursor()
         
         # 构建查询
-        query = 'SELECT * FROM service_records'
+        query = 'SELECT * FROM service_log'
         params = []
         
         if service_type:
@@ -175,7 +175,7 @@ def get_service_records():
             params.append(service_type)
         
         # 获取总数
-        count_query = 'SELECT COUNT(*) FROM service_records'
+        count_query = 'SELECT COUNT(*) FROM service_log'
         if service_type:
             count_query += ' WHERE service_type = ?'
         cursor.execute(count_query, params)
@@ -206,9 +206,9 @@ def export_data():
         conn = get_db()
         
         # 读取数据
-        seniors_df = pd.read_sql('SELECT * FROM seniors', conn)
-        health_df = pd.read_sql('SELECT * FROM health_records', conn)
-        service_df = pd.read_sql('SELECT * FROM service_records', conn)
+        seniors_df = pd.read_sql('SELECT * FROM senior', conn)
+        health_df = pd.read_sql('SELECT * FROM health_record', conn)
+        service_df = pd.read_sql('SELECT * FROM service_log', conn)
         
         conn.close()
         
@@ -230,3 +230,49 @@ def export_data():
     except Exception as e:
         print(f"导出数据失败: {e}")
         return jsonify({'error': '导出数据失败'}), 500
+
+@bp.route('/communities')
+def get_communities():
+    """获取社区列表"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 查询所有社区
+        cursor.execute('SELECT DISTINCT community_id FROM senior')
+        communities = [row[0] for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        # 如果没有社区数据，返回默认社区列表
+        if not communities:
+            communities = ['社区A', '社区B', '社区C', '社区D', '社区E']
+        
+        return jsonify(communities)
+    except Exception as e:
+        print(f"获取社区列表失败: {e}")
+        # 返回默认社区列表作为 fallback
+        return jsonify(['社区A', '社区B', '社区C', '社区D', '社区E'])
+
+@bp.route('/services')
+def get_services():
+    """获取服务类型列表"""
+    try:
+        conn = get_db()
+        cursor = conn.cursor()
+        
+        # 查询所有服务类型
+        cursor.execute('SELECT DISTINCT service_type FROM service_log')
+        services = [row[0] for row in cursor.fetchall()]
+        
+        conn.close()
+        
+        # 如果没有服务类型数据，返回默认服务类型列表
+        if not services:
+            services = ['助餐', '助医', '保洁', '陪护', '康复']
+        
+        return jsonify(services)
+    except Exception as e:
+        print(f"获取服务类型列表失败: {e}")
+        # 返回默认服务类型列表作为 fallback
+        return jsonify(['助餐', '助医', '保洁', '陪护', '康复'])
