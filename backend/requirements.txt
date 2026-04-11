@@ -10,4 +10,4 @@ pyhive
 thrift
 thrift-sasl
 python-dotenv
-xgboost
+xgboost==1.5.2
