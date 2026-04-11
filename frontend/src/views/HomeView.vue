@@ -28,6 +28,14 @@
           <el-icon><Cpu /></el-icon>
           训练模型
         </el-button>
+        <el-button
+          size="small"
+          type="danger"
+          @click="logout"
+          style="margin-left: 10px"
+        >
+          退出登录
+        </el-button>
       </div>
     </el-header>
     <el-main>
@@ -266,11 +274,13 @@
 </template>
 
 <script setup lang="ts">
+import auth from "@/utils/auth";
 import axios from "@/utils/http";
 import { ArrowRight, Cpu, Refresh, Tools } from "@element-plus/icons-vue";
 import * as echarts from "echarts";
 import { ElMessage } from "element-plus";
 import { onMounted, ref } from "vue";
+import { useRouter } from "vue-router";
 
 // 类型定义
 interface HealthDistribution {
@@ -289,6 +299,8 @@ const indicators = ref({
   avg_satisfaction: 0,
   high_risk_count: 0,
 });
+
+const router = useRouter();
 
 const healthDistribution = ref<HealthDistribution>({ values: [] });
 const serviceFrequency = ref<ServiceFrequency>({ types: [], counts: [] });
@@ -359,6 +371,12 @@ const loadData = async () => {
     console.error("加载数据失败:", error);
   }
 };
+
+function logout() {
+  auth.logout();
+  ElMessage.success("已退出登录");
+  router.push({ path: "/login" });
+}
 
 // 加载老人详情数据
 const loadSeniorDetailData = async () => {

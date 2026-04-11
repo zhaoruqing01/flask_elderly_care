@@ -1,7 +1,7 @@
 <template>
   <el-container class="app-container">
     <!-- 侧边栏 -->
-    <el-aside width="240px" class="sidebar">
+    <el-aside v-if="!isLogin" width="240px" class="sidebar">
       <div class="sidebar-header">
         <h3>养老服务数据分析系统</h3>
         <p>智能预测与资源管理</p>
@@ -44,7 +44,7 @@
     </el-aside>
 
     <!-- 主内容区 -->
-    <el-container>
+    <el-container :class="{ 'full-screen': isLogin }">
       <el-main>
         <router-view v-slot="{ Component }">
           <transition name="fade" mode="out-in">
@@ -73,6 +73,8 @@ const route = useRoute();
 const activeMenu = computed(() => {
   return route.path;
 });
+
+const isLogin = computed(() => route.path === "/login");
 </script>
 
 <style>
@@ -115,6 +117,10 @@ body {
   background-color: #f5f7fa;
   display: flex;
   overflow: hidden;
+}
+
+.full-screen {
+  width: 100%;
 }
 
 .sidebar {

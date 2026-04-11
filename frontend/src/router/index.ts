@@ -1,7 +1,16 @@
+import auth from "@/utils/auth";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
 
 const routes: RouteRecordRaw[] = [
+  {
+    path: "/login",
+    name: "Login",
+    component: () => import("../views/LoginView.vue"),
+    meta: {
+      title: "登录",
+    },
+  },
   {
     path: "/",
     name: "Home",
@@ -74,7 +83,11 @@ const router = createRouter({
 
 router.beforeEach((to, _from, next) => {
   document.title = `${to.meta.title || "养老服务数据分析系统"} - 养老服务数据分析系统`;
-  next();
+  if (to.path !== "/login" && !auth.isAuthenticated()) {
+    next({ path: "/login" });
+  } else {
+    next();
+  }
 });
 
 export default router;

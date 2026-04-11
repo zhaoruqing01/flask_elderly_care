@@ -138,12 +138,7 @@
         <template #header>
           <div class="card-header">
             <span>服务需求预测趋势</span>
-            <div class="card-header-actions">
-              <el-switch
-                v-model="showConfidenceInterval"
-                active-text="显示置信区间"
-              />
-            </div>
+     
           </div>
         </template>
         <div id="predictionTrendChart" class="chart-container"></div>
