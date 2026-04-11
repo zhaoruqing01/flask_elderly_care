@@ -1,0 +1,13 @@
+Flask
+Flask-CORS
+pandas
+numpy
+scikit-learn
+Faker
+joblib
+happybase
+pyhive
+thrift
+thrift-sasl
+python-dotenv
+xgboost
