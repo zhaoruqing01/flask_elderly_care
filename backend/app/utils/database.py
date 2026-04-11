@@ -26,7 +26,18 @@ class Database:
         返回值：
         - sqlite3.Connection: 数据库连接对象
         """
-        return sqlite3.connect(self.db_path)
+        # 确保数据库目录存在，防止 "unable to open database file"
+        db_dir = os.path.dirname(self.db_path)
+        try:
+            os.makedirs(db_dir, exist_ok=True)
+        except Exception:
+            pass
+
+        try:
+            return sqlite3.connect(self.db_path)
+        except sqlite3.OperationalError as e:
+            # 提供更明确的错误信息
+            raise sqlite3.OperationalError(f"Unable to open database file '{self.db_path}': {e}")
     
     def execute(self, query, params=None):
         """

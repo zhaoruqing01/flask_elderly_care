@@ -18,22 +18,17 @@ class HealthService:
         - dict: 健康状态分布数据
         """
         # 取每位老人最新的一条健康记录，然后统计健康状态分布
+        # 使用兼容的子查询语法，避免 CTE 在某些 SQLite/Hive 环境中不被支持
         query = '''
-        WITH latest AS (
-            SELECT hr.elderly_id, hr.health_status
-            FROM health_record hr
-            JOIN (
-                SELECT elderly_id, MAX(record_date) AS max_date
-                FROM health_record
-                GROUP BY elderly_id
-            ) lr ON hr.elderly_id = lr.elderly_id AND hr.record_date = lr.max_date
+        SELECT hr.health_status, COUNT(*) as count
+        FROM health_record hr
+        WHERE hr.record_date = (
+            SELECT MAX(record_date) FROM health_record hr2 WHERE hr2.elderly_id = hr.elderly_id
         )
-        SELECT health_status, COUNT(*) as count
-        FROM latest
-        GROUP BY health_status
+        GROUP BY hr.health_status
         '''
 
-        result = db.execute(query)
+        result = db.execute(query) or []
         
         # 定义健康状态顺序
         status_order = ['良好', '临界', '高危']
@@ -129,7 +124,7 @@ class HealthService:
         ORDER BY age_group
         '''
 
-        result = db.execute(query)
+        result = db.execute(query) or []
         
         # 处理结果
         age_groups = ['<60', '60-69', '70-79', '80-89', '90+']
@@ -194,18 +189,28 @@ class HealthService:
         
         # 收集所有月份
         month_set = set()
-        for month, _, _ in result:
+        for r in result or []:
+            month = r[0]
             if month:
                 month_set.add(month)
         months = sorted(month_set)
         
         # 重新查询获取完整数据
-        result = db.execute(query)
+        result = db.execute(query) or []
         temp_data = {month: {status: 0 for status in health_statuses} for month in months}
         
         for month, status, count in result:
-            if month in temp_data and status in temp_data[month]:
-                temp_data[month][status] = int(count)
+            if month in temp_data:
+                s = status
+                if s in temp_data[month]:
+                    temp_data[month][s] = int(count)
+                else:
+                    # 兼容英文状态
+                    ls = str(s).lower()
+                    if 'healthy' in ls:
+                        temp_data[month]['良好'] = int(count)
+                    elif 'hyper' in ls or 'diab' in ls or 'high' in ls:
+                        temp_data[month]['临界'] = int(count)
         
         # 构建返回数据
         for status in health_statuses:

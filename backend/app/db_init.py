@@ -24,7 +24,7 @@ def init_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # 创建老人表
+    # 创建老人表（兼容旧表名 seniors 与新表 elderly）
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS seniors (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,8 +35,20 @@ def init_db():
         avg_satisfaction REAL
     )
     ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS elderly (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        elderly_id TEXT UNIQUE,
+        name TEXT,
+        age INTEGER,
+        gender TEXT,
+        community_id TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
     
-    # 创建健康记录表
+    # 创建健康记录表（兼容 health_records 与 health_record）
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS health_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -50,8 +62,21 @@ def init_db():
         FOREIGN KEY (senior_id) REFERENCES seniors (id)
     )
     ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS health_record (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        elderly_id TEXT,
+        record_date TEXT,
+        sbp INTEGER,
+        dbp INTEGER,
+        blood_sugar REAL,
+        heart_rate INTEGER,
+        health_status TEXT
+    )
+    ''')
     
-    # 创建服务记录表
+    # 创建服务记录表（兼容 service_records 与 service_record）
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS service_records (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -64,7 +89,64 @@ def init_db():
         FOREIGN KEY (senior_id) REFERENCES seniors (id)
     )
     ''')
+
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS service_record (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        elderly_id TEXT,
+        community_id TEXT,
+        service_type TEXT,
+        service_date TEXT,
+        duration INTEGER,
+        satisfaction INTEGER
+    )
+    ''')
     
+    # 在插入兼容表之前，确保兼容表的列存在（对存在的旧表进行列补齐）
+    def ensure_columns(table_name, cols):
+        try:
+            cursor.execute(f"PRAGMA table_info({table_name})")
+            existing = [r[1] for r in cursor.fetchall()]
+        except Exception:
+            existing = []
+        for col_name, col_def in cols.items():
+            if col_name not in existing:
+                try:
+                    cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}")
+                except Exception:
+                    # 如果表不存在或无法添加，忽略并继续
+                    pass
+
+    # health_record 需要的列
+    ensure_columns('health_record', {
+        'elderly_id': 'TEXT',
+        'record_date': 'TEXT',
+        'sbp': 'INTEGER',
+        'dbp': 'INTEGER',
+        'blood_sugar': 'REAL',
+        'heart_rate': 'INTEGER',
+        'health_status': 'TEXT'
+    })
+
+    # service_record 需要的列
+    ensure_columns('service_record', {
+        'elderly_id': 'TEXT',
+        'community_id': 'TEXT',
+        'service_type': 'TEXT',
+        'service_date': 'TEXT',
+        'duration': 'INTEGER',
+        'satisfaction': 'INTEGER'
+    })
+
+    # elderly 需要的列
+    ensure_columns('elderly', {
+        'elderly_id': 'TEXT',
+        'name': 'TEXT',
+        'age': 'INTEGER',
+        'gender': 'TEXT',
+        'community_id': 'TEXT'
+    })
+
     # 插入初始数据
     # 插入老人数据
     seniors_data = [
@@ -103,6 +185,16 @@ def init_db():
     INSERT OR IGNORE INTO health_records (senior_id, date, sbp, dbp, blood_sugar, heart_rate, health_status)
     VALUES (?, ?, ?, ?, ?, ?, ?)
     ''', health_records_data)
+
+    # 也插入到兼容的 health_record 表（将 senior_id -> elderly_id 假设一一对应）
+    for rec in health_records_data:
+        sid, date, sbp, dbp, sugar, hr, status = rec
+        # 构造兼容 elderly_id（E开头）
+        elderly_id = f'E{sid:05d}'
+        cursor.execute('''
+        INSERT OR IGNORE INTO health_record (elderly_id, record_date, sbp, dbp, blood_sugar, heart_rate, health_status)
+        VALUES (?, ?, ?, ?, ?, ?, ?)
+        ''', (elderly_id, date, sbp, dbp, sugar, hr, status))
     
     # 插入服务记录数据
     service_records_data = [
@@ -122,8 +214,63 @@ def init_db():
     INSERT OR IGNORE INTO service_records (senior_id, service_date, service_type, duration, satisfaction, community_id)
     VALUES (?, ?, ?, ?, ?, ?)
     ''', service_records_data)
+
+    # 同步插入兼容的 service_record 表
+    for rec in service_records_data:
+        sid, sdate, stype, duration, satis, comm = rec
+        elderly_id = f'E{sid:05d}'
+        cursor.execute('''
+        INSERT OR IGNORE INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction)
+        VALUES (?, ?, ?, ?, ?, ?)
+        ''', (elderly_id, comm, stype, sdate, duration, satis))
     
     # 提交更改
+    conn.commit()
+    # 在插入兼容表之前，确保兼容表的列存在（对存在的旧表进行列补齐）
+    def ensure_columns(table_name, cols):
+        try:
+            cursor.execute(f"PRAGMA table_info({table_name})")
+            existing = [r[1] for r in cursor.fetchall()]
+        except Exception:
+            existing = []
+        for col_name, col_def in cols.items():
+            if col_name not in existing:
+                try:
+                    cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}")
+                except Exception:
+                    # 如果表不存在或无法添加，忽略并继续
+                    pass
+
+    # health_record 需要的列
+    ensure_columns('health_record', {
+        'elderly_id': 'TEXT',
+        'record_date': 'TEXT',
+        'sbp': 'INTEGER',
+        'dbp': 'INTEGER',
+        'blood_sugar': 'REAL',
+        'heart_rate': 'INTEGER',
+        'health_status': 'TEXT'
+    })
+
+    # service_record 需要的列
+    ensure_columns('service_record', {
+        'elderly_id': 'TEXT',
+        'community_id': 'TEXT',
+        'service_type': 'TEXT',
+        'service_date': 'TEXT',
+        'duration': 'INTEGER',
+        'satisfaction': 'INTEGER'
+    })
+
+    # elderly 需要的列
+    ensure_columns('elderly', {
+        'elderly_id': 'TEXT',
+        'name': 'TEXT',
+        'age': 'INTEGER',
+        'gender': 'TEXT',
+        'community_id': 'TEXT'
+    })
+
     conn.commit()
     conn.close()
     
