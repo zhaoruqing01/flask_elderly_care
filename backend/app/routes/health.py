@@ -4,6 +4,7 @@
 """
 
 from flask import Blueprint, jsonify
+import traceback
 from app.services.health_service import HealthService
 
 # 创建蓝图
@@ -22,7 +23,9 @@ def get_health_distribution():
         data = health_service.get_health_distribution()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        # 返回详细堆栈信息，便于开发调试（仅限开发环境）
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/distribution/age')
 def get_health_distribution_by_age():
@@ -34,7 +37,8 @@ def get_health_distribution_by_age():
         data = health_service.get_health_distribution_by_age()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/trend')
 def get_health_trend():
@@ -46,7 +50,8 @@ def get_health_trend():
         data = health_service.get_health_trend()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/recommendations')
 def get_health_recommendations():
@@ -96,4 +101,5 @@ def get_health_recommendations():
         ]
         return jsonify({'data': recommendations})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500

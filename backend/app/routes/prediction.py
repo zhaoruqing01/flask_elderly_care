@@ -4,6 +4,7 @@
 """
 
 from flask import Blueprint, jsonify, request
+import traceback
 from app.services.prediction_service import PredictionService
 
 # 创建蓝图
@@ -36,7 +37,8 @@ def get_prediction_trend():
         data = prediction_service.get_prediction_trend(community_id, service_type, days, model, confidence, seasonal)
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/resource/recommendations')
 def get_resource_recommendations():
@@ -52,7 +54,8 @@ def get_resource_recommendations():
         data = prediction_service.get_resource_recommendations(community)
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/model/metrics')
 def get_model_metrics():
@@ -64,7 +67,8 @@ def get_model_metrics():
         data = prediction_service.get_model_metrics()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/model/comparison')
 def get_model_comparison():
@@ -76,7 +80,8 @@ def get_model_comparison():
         data = prediction_service.get_model_comparison()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/model/train', methods=['POST'])
 def train_model():
@@ -88,7 +93,8 @@ def train_model():
         data = prediction_service.train_model()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/anomalies')
 def get_anomalies():
@@ -100,7 +106,8 @@ def get_anomalies():
         data = prediction_service.detect_anomalies()
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/export')
 def export_prediction_data():
@@ -120,4 +127,5 @@ def export_prediction_data():
         data = prediction_service.export_prediction_data(community_id, service_type, days)
         return jsonify(data)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500

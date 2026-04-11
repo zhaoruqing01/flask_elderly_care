@@ -4,6 +4,7 @@
 """
 
 from flask import Blueprint, jsonify
+import traceback
 from app.services.admin_service import AdminService
 
 # 创建蓝图
@@ -22,7 +23,8 @@ def clean_data():
         stats = admin_service.clean_data()
         return jsonify(stats)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/train', methods=['POST'])
 def train_model_api():
@@ -34,7 +36,8 @@ def train_model_api():
         metrics = admin_service.train_model()
         return jsonify(metrics)
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/generate', methods=['POST'])
 def generate_data():
@@ -46,7 +49,8 @@ def generate_data():
         admin_service.generate_data()
         return jsonify({'message': '模拟数据生成完成！'})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/logs', methods=['GET'])
 def get_logs():
@@ -58,7 +62,8 @@ def get_logs():
         logs = admin_service.get_logs()
         return jsonify({'data': logs})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
 
 @bp.route('/data-quality', methods=['GET'])
 def get_data_quality():
@@ -70,4 +75,5 @@ def get_data_quality():
         data_quality = admin_service.get_data_quality()
         return jsonify({'data': data_quality})
     except Exception as e:
-        return jsonify({'error': str(e)}), 500
+        tb = traceback.format_exc()
+        return jsonify({'error': str(e), 'traceback': tb}), 500
