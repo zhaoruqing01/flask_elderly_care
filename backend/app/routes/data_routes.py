@@ -7,6 +7,7 @@ from flask import Blueprint, jsonify, request, send_file, current_app
 import sqlite3
 import pandas as pd
 import io
+import traceback
 
 # 创建蓝图
 bp = Blueprint('data', __name__, url_prefix='/api/data')
@@ -235,11 +236,33 @@ def export_data():
     try:
         conn = get_db()
         
-        # 读取数据
-        seniors_df = pd.read_sql('SELECT * FROM elderly', conn)
-        health_df = pd.read_sql('SELECT * FROM health_record', conn)
-        service_df = pd.read_sql('SELECT * FROM service_record', conn)
-        
+        # 读取数据，兼容多套表名
+        def table_exists(name):
+            cur = conn.cursor()
+            try:
+                cur.execute("SELECT name FROM sqlite_master WHERE type='table' AND name=?", (name,))
+                return cur.fetchone() is not None
+            finally:
+                cur.close()
+
+        def read_prefer(names, default_columns=None):
+            # names: list of candidate table names in order
+            for n in names:
+                if table_exists(n):
+                    try:
+                        return pd.read_sql(f'SELECT * FROM {n}', conn)
+                    except Exception:
+                        # try next
+                        continue
+            # 返回空的 DataFrame 作为兜底
+            if default_columns:
+                return pd.DataFrame(columns=default_columns)
+            return pd.DataFrame()
+
+        seniors_df = read_prefer(['elderly', 'seniors', 'senior'], default_columns=['elderly_id', 'name', 'age', 'gender', 'community_id'])
+        health_df = read_prefer(['health_record', 'health_records', 'health_log'], default_columns=['elderly_id', 'record_date', 'sbp', 'dbp', 'blood_sugar', 'heart_rate', 'health_status'])
+        service_df = read_prefer(['service_record', 'service_records', 'service_log'], default_columns=['elderly_id', 'service_date', 'service_type', 'duration', 'satisfaction', 'community_id'])
+
         conn.close()
         
         # 创建Excel文件
@@ -258,8 +281,10 @@ def export_data():
             download_name='elderly_care_data.xlsx'
         )
     except Exception as e:
-        print(f"导出数据失败: {e}")
-        return jsonify({'error': '导出数据失败'}), 500
+        tb = traceback.format_exc()
+        print(f"导出数据失败: {e}\n{tb}")
+        # 在开发环境返回详细堆栈，便于定位问题；生产可改为简短信息
+        return jsonify({'error': '导出数据失败', 'traceback': tb}), 500
 
 @bp.route('/communities')
 def get_communities():
