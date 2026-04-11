@@ -98,16 +98,8 @@ class HealthService:
         - dict: 按年龄段分析的健康状态分布数据
         """
         # 按年龄段统计（使用 elderly 表中的年龄，按每位老人最新记录统计健康状态）
+        # 避免使用 CTE（WITH），使用子查询兼容更多 SQLite 版本
         query = '''
-        WITH latest AS (
-            SELECT hr.elderly_id, hr.health_status
-            FROM health_record hr
-            JOIN (
-                SELECT elderly_id, MAX(record_date) AS max_date
-                FROM health_record
-                GROUP BY elderly_id
-            ) lr ON hr.elderly_id = lr.elderly_id AND hr.record_date = lr.max_date
-        )
         SELECT
             CASE
                 WHEN e.age < 60 THEN '<60'
@@ -116,11 +108,17 @@ class HealthService:
                 WHEN e.age >= 80 AND e.age < 90 THEN '80-89'
                 ELSE '90+'
             END as age_group,
-            l.health_status,
+            lr.health_status,
             COUNT(*) as count
-        FROM latest l
-        JOIN elderly e ON l.elderly_id = e.elderly_id
-        GROUP BY age_group, l.health_status
+        FROM (
+            SELECT hr.elderly_id, hr.health_status, hr.record_date
+            FROM health_record hr
+            WHERE hr.record_date = (
+                SELECT MAX(record_date) FROM health_record hr2 WHERE hr2.elderly_id = hr.elderly_id
+            )
+        ) lr
+        JOIN elderly e ON lr.elderly_id = e.elderly_id
+        GROUP BY age_group, lr.health_status
         ORDER BY age_group
         '''
 

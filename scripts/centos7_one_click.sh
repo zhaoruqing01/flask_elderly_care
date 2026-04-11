@@ -402,16 +402,30 @@ export_sqlite() {
   info "数据导出完成！"
 }
 
+# ==================== 【集成修复】启动后端API（内置初始化+生成数据） ====================
 start_backend_api() {
-  info "启动后端 API 服务 (5008 端口)..."
+  info "============================================="
+  info "步骤1：修复数据库表/字段（解决500报错）"
   mkdir -p "${LOG_DIR}"
   export PYTHONPATH="${PROJECT_ROOT}"
+  # 执行数据库初始化修复（你要的第1步）
+  python3 "${BACKEND_DIR}/app/db_init.py" > "${LOG_DIR}/db_init.log" 2>&1
+  info "✅ 数据库修复完成！"
+
+  info "步骤2：生成测试数据（解决空数据/0值）"
+  # 执行数据生成（你要的第2步）
+  python3 "${BACKEND_DIR}/data_generator.py" > "${LOG_DIR}/data_gen.log" 2>&1
+  info "✅ 测试数据生成完成！"
+
+  info "步骤3：启动后端 API 服务 (5008 端口)..."
   pkill -f 'python3 .*app.py' || true
+  # 启动API
   nohup python3 "${BACKEND_DIR}/app.py" > "${LOG_DIR}/backend-api.log" 2>&1 &
   sleep 5
   
   if netstat -tlnp 2>/dev/null | grep -q ":5008 "; then
       info "✅ 后端 API 启动成功！"
+      info "============================================="
   else
       error "❌ 后端 API 启动失败，请检查 ${LOG_DIR}/backend-api.log"
   fi

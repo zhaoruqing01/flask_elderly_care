@@ -17,6 +17,7 @@
 """
 
 import sqlite3  # 用于操作 SQLite 数据库
+from app.config.config import current_config
 import pandas as pd  # 用于数据处理
 import numpy as np  # 用于数值计算
 from datetime import datetime, timedelta  # 用于处理日期
@@ -29,10 +30,10 @@ import os  # 用于操作文件系统
 import xgboost as xgb  # XGBoost模型
 from sklearn.neural_network import MLPRegressor  # 神经网络模型
 
-# 数据库文件路径
-DB_PATH = 'database/elderly_care.db'
+# 数据库文件路径，使用项目配置确保路径正确
+DB_PATH = current_config.DATABASE_PATH
 # 模型保存路径
-MODEL_PATH = 'models/'
+MODEL_PATH = current_config.MODEL_PATH
 
 # 确保模型目录存在
 os.makedirs(MODEL_PATH, exist_ok=True)
