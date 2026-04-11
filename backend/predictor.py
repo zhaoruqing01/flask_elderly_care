@@ -145,25 +145,21 @@ class AdvancedPredictor:
         daily_service['demand_rolling7_std'] = daily_service.groupby(['community_id', 'service_type'])['demand'].transform(
             lambda x: x.rolling(window=7, min_periods=1).std()
         )  # 7天移动标准差
-        
-     # 计算趋势特征
-    def calculate_trend(y):
-        try:
-            # 过滤空值、无穷大等无效数据
-            y_valid = y[np.isfinite(y)]
-            # 有效数据不足2个 或 所有数据完全相同，无法拟合，返回0
-            if len(y_valid) < 2 or np.all(y_valid == y_valid[0]):
-                return 0.0
-            # 执行线性拟合计算趋势
-            return np.polyfit(range(len(y_valid)), y_valid, 1)[0]
-        except Exception:
-            # 捕获所有异常，保证程序不崩溃
-            return 0.0
 
-    daily_service['demand_trend'] = daily_service.groupby(['community_id', 'service_type'])['demand'].transform(
-        lambda x: x.rolling(window=7, min_periods=1).apply(calculate_trend)
-    )  # 7天趋势
-        
+        # 计算趋势特征
+        def calculate_trend(y):
+            try:
+                y_valid = y[np.isfinite(y)]
+                if len(y_valid) < 2 or np.all(y_valid == y_valid[0]):
+                    return 0.0
+                return np.polyfit(range(len(y_valid)), y_valid, 1)[0]
+            except Exception:
+                return 0.0
+
+        daily_service['demand_trend'] = daily_service.groupby(['community_id', 'service_type'])['demand'].transform(
+            lambda x: x.rolling(window=7, min_periods=1).apply(calculate_trend)
+        )  # 7天趋势
+
         # 处理缺失值
         numeric_cols = daily_service.select_dtypes(include=[np.number]).columns
         daily_service[numeric_cols] = daily_service[numeric_cols].fillna(0)
