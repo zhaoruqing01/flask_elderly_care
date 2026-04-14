@@ -8,14 +8,6 @@
         <el-button type="primary" @click="refreshData" icon="Refresh">
           刷新数据
         </el-button>
-        <el-button
-          type="success"
-          @click="exportData"
-          icon="Download"
-          style="margin-left: 10px"
-        >
-          导出数据
-        </el-button>
       </div>
     </el-header>
     <el-main>
@@ -138,9 +130,9 @@
           border
           show-overflow-tooltip
         >
-          <el-table-column prop="id" label="记录ID" />
-          <el-table-column prop="senior_id" label="老人ID" />
-          <el-table-column prop="date" label="记录日期" />
+          <!-- <el-table-column prop="id" label="记录ID" /> -->
+          <el-table-column prop="id" label="老人ID" />
+          <el-table-column prop="created_at" label="记录日期" />
           <el-table-column prop="sbp" label="收缩压" />
           <el-table-column prop="dbp" label="舒张压" />
           <el-table-column prop="blood_sugar" label="血糖" />
@@ -201,8 +193,8 @@
           border
           show-overflow-tooltip
         >
-          <el-table-column prop="id" label="记录ID" />
-          <el-table-column prop="senior_id" label="老人ID" />
+          <!-- <el-table-column prop="id" label="记录ID" /> -->
+          <el-table-column prop="id" label="老人ID" />
           <el-table-column prop="service_date" label="服务日期" />
           <el-table-column prop="service_type" label="服务类型" />
           <el-table-column prop="duration" label="服务时长(分钟)" />

@@ -16,7 +16,7 @@
 本手册默认项目路径为：
 
 ```bash
-/opt/bigdata/flask_elderly_care
+/root/flask_elderly_care
 ```
 
 如果你的项目不在这个路径，请把手册中的路径改成你自己的路径。
@@ -28,7 +28,7 @@
 ### 1.1 进入项目目录
 
 ```bash
-cd /opt/bigdata/flask_elderly_care
+cd /root/flask_elderly_care
 pwd
 ```
 
@@ -45,14 +45,14 @@ python3 --version
 ### 1.3 安装 Python 依赖
 
 ```bash
-cd /opt/bigdata/flask_elderly_care/backend
+cd /root/flask_elderly_care/backend
 pip3 install -r requirements.txt
 ```
 
 ### 1.4 回到项目根目录
 
 ```bash
-cd /opt/bigdata/flask_elderly_care
+cd /root/flask_elderly_care
 ```
 
 ---

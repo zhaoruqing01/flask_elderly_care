@@ -17,7 +17,11 @@
             @submit.prevent="handleLogin"
           >
             <el-form-item prop="username">
-              <el-input v-model="form.username" placeholder="用户名"></el-input>
+              <el-input
+                v-model="form.username"
+                placeholder="用户名"
+                @keyup.enter.prevent="handleLogin"
+              ></el-input>
             </el-form-item>
 
             <el-form-item prop="password">
@@ -25,6 +29,7 @@
                 v-model="form.password"
                 type="password"
                 placeholder="密码"
+                @keyup.enter.prevent="handleLogin"
               ></el-input>
             </el-form-item>
 
@@ -56,6 +61,7 @@
               <el-input
                 v-model="reg.username"
                 placeholder="注册用户名"
+                @keyup.enter.prevent="handleRegister"
               ></el-input>
             </el-form-item>
             <el-form-item>
@@ -63,6 +69,7 @@
                 v-model="reg.password"
                 type="password"
                 placeholder="密码（至少6位）"
+                @keyup.enter.prevent="handleRegister"
               ></el-input>
             </el-form-item>
             <el-form-item>
@@ -70,6 +77,7 @@
                 v-model="reg.confirm"
                 type="password"
                 placeholder="确认密码"
+                @keyup.enter.prevent="handleRegister"
               ></el-input>
             </el-form-item>
 
