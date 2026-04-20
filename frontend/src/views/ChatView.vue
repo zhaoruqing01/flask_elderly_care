@@ -39,6 +39,20 @@
               <div class="message-text">{{ message.text }}</div>
             </div>
           </div>
+          <!-- 当没有消息时显示常见问题 -->
+          <div v-if="messages.length === 1" class="initial-questions">
+            <div class="initial-questions-header">热门问题</div>
+            <div class="common-questions">
+              <el-tag
+                v-for="(question, index) in commonQuestions"
+                :key="index"
+                class="common-question-tag"
+                @click="selectQuestion(question)"
+              >
+                {{ question }}
+              </el-tag>
+            </div>
+          </div>
           <div v-if="isLoading" class="loading-message">
             <el-icon class="is-loading"><Loading /></el-icon>
             <span>AI正在思考...</span>
@@ -61,24 +75,6 @@
           >
             发送
           </el-button>
-          <!-- </div> -->
-        </div>
-      </el-card>
-      <el-card style="margin-top: 20px">
-        <template #header>
-          <div class="card-header">
-            <span>常见问题</span>
-          </div>
-        </template>
-        <div class="common-questions">
-          <el-tag
-            v-for="(question, index) in commonQuestions"
-            :key="index"
-            class="common-question-tag"
-            @click="selectQuestion(question)"
-          >
-            {{ question }}
-          </el-tag>
         </div>
       </el-card>
     </el-main>
@@ -254,6 +250,7 @@ onMounted(() => {
   width: 100%;
   height: 100%;
   overflow: hidden;
+  background-color: #f8fafd;
 }
 
 .header {
@@ -261,35 +258,36 @@ onMounted(() => {
   justify-content: space-between;
   align-items: center;
   background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
   padding: 0 20px;
+  border-bottom: 1px solid #eee;
 }
 
 .header-left h2 {
   margin: 0;
-  font-size: 1.2rem;
+  font-size: 1.3rem;
   color: #0066cc;
-}
-
-.header-right {
-  display: flex;
-  align-items: center;
+  font-weight: 600;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  padding-bottom: 10px;
 }
 
-.card-header-actions {
-  display: flex;
-  align-items: center;
-  gap: 10px;
+.card-header span {
+  font-weight: 600;
+  color: #333;
+  font-size: 1.1rem;
 }
 
 .chat-messages {
-  height: 300px;
+  flex: 1;
+  height: auto;
+  min-height: 300px;
+  max-height: 50vh;
   overflow-y: auto;
   padding: 20px;
   border-bottom: 1px solid #eaeef1;
@@ -299,6 +297,16 @@ onMounted(() => {
 .message {
   margin-bottom: 20px;
   display: flex;
+  opacity: 0;
+  transform: translateY(10px);
+  animation: fadeIn 0.3s ease forwards;
+}
+
+@keyframes fadeIn {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .user-message {
@@ -313,28 +321,37 @@ onMounted(() => {
   max-width: 80%;
   padding: 12px 16px;
   border-radius: 18px;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.08);
+  transition: all 0.2s ease;
 }
 
 .user-message .message-content {
-  background-color: #e8f3ff;
-  color: #0066cc;
+  background: linear-gradient(145deg, #d4e6f8, #e8f3ff);
+  color: #0056b3;
   border-bottom-right-radius: 4px;
 }
 
 .ai-message .message-content {
-  background-color: #f5f7fa;
+  background: linear-gradient(145deg, #f0f2f5, #f5f7fa);
   color: #333;
   border-bottom-left-radius: 4px;
+}
+
+.user-message .message-content:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
+}
+
+.ai-message .message-content:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.12);
 }
 
 .message-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 8px;
+  margin-bottom: 6px;
   font-size: 0.8rem;
-  color: #909399;
+  color: #777;
 }
 
 .message-text {
@@ -345,41 +362,119 @@ onMounted(() => {
   display: flex;
   align-items: center;
   justify-content: center;
-  margin-top: 20px;
-  color: #909399;
+  margin: 15px 0;
+  color: #606266;
+  font-size: 14px;
 }
 
 .loading-message .el-icon {
   margin-right: 8px;
+  color: #0066cc;
+  animation: rotate 2s linear infinite;
+}
+
+@keyframes rotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
 .chat-input {
   display: flex;
-  /* flex-direction: column; */
   gap: 10px;
+  position: relative;
 }
 
 .sub-btn {
+  border-radius: 8px;
+  width: 80px;
+  height: 75px;
+  align-self: flex-end;
+  background-color: #0066cc;
+  border-color: #0066cc;
+}
+
+.sub-btn:hover {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.sub-btn:active {
+  background-color: #004499;
+  border-color: #004499;
+}
+
+.initial-questions {
+  padding: 15px;
+  text-align: center;
+  background-color: #f9fafc;
   border-radius: 10px;
-  width: 100px;
-  height: 70px;
+  margin-bottom: 15px;
+}
+
+.initial-questions-header {
+  font-weight: 600;
+  color: #555;
+  margin-bottom: 10px;
+  font-size: 14px;
 }
 
 .common-questions {
   display: flex;
   flex-wrap: wrap;
   gap: 10px;
-  padding: 10px 0;
+  justify-content: center;
 }
 
 .common-question-tag {
   cursor: pointer;
   transition: all 0.3s ease;
+  background-color: #f0f7ff;
+  border: 1px solid #d4e6f8;
+  color: #0066cc;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 13px;
+  box-shadow: 0 2px 4px rgba(0, 102, 204, 0.08);
 }
 
 .common-question-tag:hover {
   background-color: #e8f3ff;
-  color: #0066cc;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 102, 204, 0.15);
+}
+
+.chat-messages::-webkit-scrollbar {
+  width: 6px;
+}
+
+.chat-messages::-webkit-scrollbar-track {
+  background: #f1f1f1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb {
+  background: #c1c1c1;
+  border-radius: 3px;
+}
+
+.chat-messages::-webkit-scrollbar-thumb:hover {
+  background: #a8a8a8;
+}
+
+:deep(.chat-input .el-textarea__inner:focus) {
+  border-color: #0066cc;
+  box-shadow: 0 0 0 2px rgba(0, 102, 204, 0.2);
+}
+
+:deep(.el-card) {
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  border: 1px solid #eee;
+  overflow: hidden;
 }
 
 /* 响应式调整 */
@@ -398,11 +493,16 @@ onMounted(() => {
   }
 
   .chat-messages {
-    height: 300px;
+    min-height: 250px;
   }
 
   .message-content {
     max-width: 90%;
+  }
+
+  .common-question-tag {
+    font-size: 12px;
+    padding: 5px 10px;
   }
 }
 </style>

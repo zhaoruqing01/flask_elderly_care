@@ -42,8 +42,9 @@
       <!-- 关键指标 -->
       <el-row :gutter="20" style="margin-bottom: 20px">
         <el-col :span="6">
-          <el-card class="metric-card" @click="openSeniorDetail">
+          <el-card class="metric-card metric-senior" @click="openSeniorDetail">
             <div class="metric-content">
+              <el-icon class="metric-icon senior-icon"><User /></el-icon>
               <div class="metric-label">老人总数</div>
               <div class="metric-value">{{ indicators.senior_count }}</div>
               <div class="metric-desc">人</div>
@@ -54,8 +55,9 @@
           </el-card>
         </el-col>
         <el-col :span="6">
-          <el-card class="metric-card" @click="openServiceDetail">
+          <el-card class="metric-card metric-service" @click="openServiceDetail">
             <div class="metric-content">
+              <el-icon class="metric-icon service-icon"><Document /></el-icon>
               <div class="metric-label">服务总数</div>
               <div class="metric-value">{{ indicators.service_count }}</div>
               <div class="metric-desc">次</div>
@@ -66,8 +68,9 @@
           </el-card>
         </el-col>
         <el-col :span="6">
-          <el-card class="metric-card" @click="openSatisfactionDetail">
+          <el-card class="metric-card metric-satisfaction" @click="openSatisfactionDetail">
             <div class="metric-content">
+              <el-icon class="metric-icon satisfaction-icon"><Star /></el-icon>
               <div class="metric-label">平均满意度</div>
               <div class="metric-value">{{ indicators.avg_satisfaction }}</div>
               <div class="metric-desc">分</div>
@@ -78,8 +81,9 @@
           </el-card>
         </el-col>
         <el-col :span="6">
-          <el-card class="metric-card" @click="openHighRiskDetail">
+          <el-card class="metric-card metric-high-risk" @click="openHighRiskDetail">
             <div class="metric-content">
+              <el-icon class="metric-icon high-risk-icon"><Warning /></el-icon>
               <div class="metric-label">高危人数</div>
               <div class="metric-value">{{ indicators.high_risk_count }}</div>
               <div class="metric-desc">人</div>
@@ -1157,8 +1161,39 @@ onMounted(() => {
 }
 
 .metric-card {
-  border-left: 4px solid #0066cc;
   transition: all 0.3s ease;
+}
+
+.metric-senior {
+  border-left: 4px solid #409eff;
+}
+
+.metric-service {
+  border-left: 4px solid #67c23a;
+}
+
+.metric-satisfaction {
+  border-left: 4px solid #e6a23c;
+}
+
+.metric-high-risk {
+  border-left: 4px solid #f56c6c;
+}
+
+.senior-icon {
+  color: #409eff;
+}
+
+.service-icon {
+  color: #67c23a;
+}
+
+.satisfaction-icon {
+  color: #e6a23c;
+}
+
+.high-risk-icon {
+  color: #f56c6c;
 }
 
 .metric-card:hover {

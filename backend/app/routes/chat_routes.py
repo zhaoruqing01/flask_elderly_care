@@ -27,67 +27,67 @@ conversation_context = {}
 # 意图定义
 INTENTS = {
     'greeting': {
-        'keywords': ['你好', '您好', 'hi', 'hello', '嗨', '早上好', '下午好', '晚上好'],
+        'keywords': ['你好', '您好', 'hi', 'hello', '嗨', '早上好', '下午好', '晚上好', '您好啊', '你好呀', '哈喽'],
         'response': 'get_greeting_answer'
     },
     'thanks': {
-        'keywords': ['谢谢', '感谢', '谢了', '多谢'],
+        'keywords': ['谢谢', '感谢', '谢了', '多谢', '感谢您', '多谢啦', '谢谢啦', '非常感谢'],
         'response': 'get_thank_you_answer'
     },
     'max_demand': {
-        'keywords': ['最大需求', '需求', '需要', '最需要'],
+        'keywords': ['最大需求', '需求', '需要', '最需要', '主要需求', '核心需求', '首要需求', '最迫切需求', '最急迫需求', '最关注的需求'],
         'response': 'get_max_demand_answer'
     },
     'satisfaction': {
-        'keywords': ['满意度', '满意', '服务质量', '评价'],
+        'keywords': ['满意度', '满意', '服务质量', '评价', '服务评价', '服务感受', '服务体验', '评价如何', '服务怎么样'],
         'response': 'get_satisfaction_answer'
     },
     'community_demand': {
-        'keywords': ['社区', '需求', '哪个社区', '社区需求'],
+        'keywords': ['社区', '需求', '哪个社区', '社区需求', '哪个社区需求大', '社区需求情况', '社区需求排行', '社区需求排名'],
         'response': 'get_community_demand_answer'
     },
     'health_status': {
-        'keywords': ['健康', '健康状况', '身体状况', '健康情况'],
+        'keywords': ['健康', '健康状况', '身体状况', '健康情况', '健康情况怎么样', '身体健康状况', '健康水平', '健康指标'],
         'response': 'get_health_status_answer'
     },
     'optimization': {
-        'keywords': ['优化', '配置', '改进', '提升', '建议'],
+        'keywords': ['优化', '配置', '改进', '提升', '建议', '资源优化', '资源配置优化', '服务改进', '服务提升', '服务完善'],
         'response': 'get_optimization_answer'
     },
     'senior_count': {
-        'keywords': ['老人', '数量', '多少', '人数', '有多少老人'],
+        'keywords': ['老人', '数量', '多少', '人数', '有多少老人', '老年人数量', '老人人数', '老年人口数量', '老人总数'],
         'response': 'get_senior_count_answer'
     },
     'service_types': {
-        'keywords': ['服务', '类型', '种类', '有哪些服务'],
+        'keywords': ['服务', '类型', '种类', '有哪些服务', '服务项目', '服务种类', '服务类别', '有哪些服务项目'],
         'response': 'get_service_types_answer'
     },
     'community_count': {
-        'keywords': ['社区', '数量', '多少', '有多少社区'],
+        'keywords': ['社区', '数量', '多少', '有多少社区', '社区总数', '有多少个社区', '社区个数', '社区数目'],
         'response': 'get_community_count_answer'
     },
     'average_age': {
-        'keywords': ['平均年龄', '年龄', '多大', '平均多大'],
+        'keywords': ['平均年龄', '年龄', '多大', '平均多大', '老人平均多大', '老人平均岁数', '老人平均岁数', '老人平均岁数'],
         'response': 'get_average_age_answer'
     },
     'service_count': {
-        'keywords': ['服务次数', '多少次', '次数', '共多少次'],
+        'keywords': ['服务次数', '多少次', '次数', '共多少次', '服务总次数', '服务了多少次', '服务总数量', '服务总量'],
         'response': 'get_service_count_answer'
     },
     'help': {
-        'keywords': ['帮助', '功能', '能做什么', '怎么用', '使用'],
+        'keywords': ['帮助', '功能', '能做什么', '怎么用', '使用', '功能介绍', '你能做什么', '有什么功能', '使用指南'],
         'response': 'get_help_answer'
     },
     'service_details': {
-        'keywords': ['服务详情', '详细服务', '服务内容', '服务项目'],
+        'keywords': ['服务详情', '详细服务', '服务内容', '服务项目', '服务具体内容', '服务详细内容', '服务项目详情', '服务项目介绍'],
         'response': 'get_service_details_answer'
     },
     'health_advice': {
-        'keywords': ['健康建议', '健康指导', '保健', '养生'],
+        'keywords': ['健康建议', '健康指导', '保健', '养生', '健康指导', '保健建议', '养生建议', '健康小贴士', '健康小建议'],
         'response': 'get_health_advice_answer'
     },
     'service_process': {
-        'keywords': ['服务流程', '如何申请', '申请服务', '流程'],
+        'keywords': ['服务流程', '如何申请', '申请服务', '流程', '服务如何申请', '服务申请步骤', '服务申请流程', '如何申请服务'],
         'response': 'get_service_process_answer'
     }
 }
@@ -101,16 +101,31 @@ def detect_intent(question):
     for intent_name, intent_data in INTENTS.items():
         score = 0
         for keyword in intent_data['keywords']:
+            # 计算关键词长度，用于长度惩罚
+            keyword_length = len(keyword)
+            
             # 精确包含（中文或英文）
             if keyword in question or keyword in question_norm:
-                score += 3
+                # 完全匹配优先：长关键词给予更高权重
+                if keyword_length >= 3:  # 长度大于等于3的关键词给予更高权重
+                    score += 4
+                elif keyword_length == 2:  # 长度为2的关键词给予中等权重
+                    score += 3
+                else:  # 长度为1的关键词给予低权重（长度惩罚）
+                    score += 1
             else:
                 # 模糊匹配：将问题拆成 token，使用 difflib 进行近似匹配
                 candidates = re.findall(r"[\w\u4e00-\u9fff]+", question)
                 if candidates:
                     close = difflib.get_close_matches(keyword, candidates, n=1, cutoff=0.75)
                     if close:
-                        score += 1
+                        # 对模糊匹配也应用长度惩罚
+                        if keyword_length >= 3:
+                            score += 2
+                        elif keyword_length == 2:
+                            score += 1
+                        else:
+                            score += 0.5
         if score > 0:
             intent_scores[intent_name] = score
 
