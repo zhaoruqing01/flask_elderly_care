@@ -26,8 +26,8 @@
                     <el-option
                       v-for="community in communities"
                       :key="community"
-                      :label="community"
-                      :value="community"
+                      :label="community.name"
+                      :value="community.community_id"
                     />
                   </el-select>
                 </el-form-item>
@@ -138,7 +138,6 @@
         <template #header>
           <div class="card-header">
             <span>服务需求预测趋势</span>
-     
           </div>
         </template>
         <div id="predictionTrendChart" class="chart-container"></div>
@@ -1346,6 +1345,8 @@ const loadCommunities = async () => {
 const loadServices = async () => {
   try {
     const response = await axios.get("/api/data/services");
+    console.log(response, "responresponseresponseresponseresponsese");
+
     services.value = response.data;
     if (services.value.length > 0) {
       selectedService.value = services.value[0];

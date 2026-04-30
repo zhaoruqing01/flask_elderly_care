@@ -14,7 +14,10 @@
           <el-icon><HomeFilled /></el-icon>
           <span>首页</span>
         </el-menu-item>
-
+        <el-menu-item index="/data">
+          <el-icon><DataAnalysis /></el-icon>
+          <span>数据管理</span>
+        </el-menu-item>
         <el-menu-item index="/health">
           <el-icon><Document /></el-icon>
           <span>健康分析</span>
@@ -28,11 +31,6 @@
         <el-menu-item index="/prediction" v-if="canSeePrediction">
           <el-icon><TrendCharts /></el-icon>
           <span>需求预测</span>
-        </el-menu-item>
-
-        <el-menu-item index="/data">
-          <el-icon><DataAnalysis /></el-icon>
-          <span>数据管理</span>
         </el-menu-item>
 
         <el-menu-item index="/chat" v-if="canSeeChat">

@@ -36,13 +36,12 @@
                 @keyup.enter.prevent="handleLogin"
               ></el-input>
             </el-form-item>
-
+            <!-- 
             <div class="helpers">
-              <!-- 切换到注册 -->
               <el-button type="text" @click="toggleForm"
                 >没有账号？注册</el-button
               >
-            </div>
+            </div> -->
 
             <div class="actions">
               <el-button

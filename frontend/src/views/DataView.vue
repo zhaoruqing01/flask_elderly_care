@@ -24,38 +24,28 @@
             >
           </div>
         </template>
-        <el-row :gutter="20">
-          <el-col :span="4">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.senior_count }}</div>
-              <div class="stat-label">老人总数</div>
-            </div>
-          </el-col>
-          <el-col :span="4">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.health_records }}</div>
-              <div class="stat-label">健康记录</div>
-            </div>
-          </el-col>
-          <el-col :span="4">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.service_logs }}</div>
-              <div class="stat-label">服务记录</div>
-            </div>
-          </el-col>
-          <el-col :span="4">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.communities }}</div>
-              <div class="stat-label">社区数量</div>
-            </div>
-          </el-col>
-          <el-col :span="4">
-            <div class="stat-item">
-              <div class="stat-value">{{ stats.caregivers }}</div>
-              <div class="stat-label">护工总数</div>
-            </div>
-          </el-col>
-        </el-row>
+        <div class="stats-container">
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.senior_count }}</div>
+            <div class="stat-label">老人总数</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.health_records }}</div>
+            <div class="stat-label">健康记录</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.service_logs }}</div>
+            <div class="stat-label">服务记录</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.communities }}</div>
+            <div class="stat-label">社区数量</div>
+          </div>
+          <div class="stat-item">
+            <div class="stat-value">{{ stats.caregivers }}</div>
+            <div class="stat-label">护工总数</div>
+          </div>
+        </div>
       </el-card>
 
       <!-- 需求预测 -->
@@ -833,19 +823,50 @@
         >
       </template>
     </el-dialog>
+
+    <!-- 报表对话框 -->
+    <el-dialog
+      v-model="reportDialogVisible"
+      title="社区全景统计报表"
+      width="90%"
+      :close-on-click-modal="false"
+      class="report-dialog"
+      top="20px"
+    >
+      <div class="report-container">
+        <div class="chart-section">
+          <h3 class="chart-title">健康状态分布</h3>
+          <div ref="healthChartRef" class="chart-wrapper"></div>
+        </div>
+        <div class="chart-section">
+          <h3 class="chart-title">人口统计</h3>
+          <div ref="populationChartRef" class="chart-wrapper"></div>
+        </div>
+        <div class="chart-section">
+          <h3 class="chart-title">服务统计</h3>
+          <div ref="serviceChartRef" class="chart-wrapper large"></div>
+        </div>
+      </div>
+      <template #footer>
+        <el-button type="primary" @click="reportDialogVisible = false"
+          >关闭</el-button
+        >
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
 <script setup lang="ts">
 import auth from "@/utils/auth";
 import axios from "@/utils/http";
+import * as echarts from "echarts";
 import {
   ElMessage,
   ElMessageBox,
   type FormInstance,
   type FormRules,
 } from "element-plus";
-import { computed, onMounted, reactive, ref, watch } from "vue";
+import { computed, nextTick, onMounted, reactive, ref, watch } from "vue";
 
 const currentUser = computed(() => auth.getCurrentUser());
 const isInstitution = computed(() => currentUser.value?.role === "institution");
@@ -871,6 +892,12 @@ const stats = ref({
   communities: 0,
   caregivers: 0,
 });
+
+// 报表对话框
+const reportDialogVisible = ref(false);
+const healthChartRef = ref<HTMLElement>();
+const populationChartRef = ref<HTMLElement>();
+const serviceChartRef = ref<HTMLElement>();
 
 const seniorsData = ref([]);
 const totalSeniors = ref(0);
@@ -1069,6 +1096,13 @@ const getUserRole = () => {
   return currentUser.value?.role || "admin";
 };
 
+// 排班管理状态字典
+const scheduleStatusDict: Record<string, string> = {
+  pending: "待处理",
+  completed: "已处理",
+  canceled: "已取消",
+};
+
 // 刷新数据
 const refreshData = async () => {
   try {
@@ -1098,7 +1132,10 @@ const refreshData = async () => {
           ? { caregiver_id: currentUser.value?.username, role }
           : { role },
       });
-      schedulesData.value = schRes.data;
+      schedulesData.value = schRes.data.map((s: any) => ({
+        ...s,
+        status: scheduleStatusDict[s.status],
+      }));
     }
 
     loadSeniorsData();
@@ -1387,14 +1424,350 @@ const showReportDialog = async () => {
   const res = await axios.get("/api/data/reports/community", {
     params: { role },
   });
-  ElMessageBox.alert(
-    `<pre>${JSON.stringify(res.data, null, 2)}</pre>`,
-    "社区全景统计报表",
-    {
-      dangerouslyUseHTMLString: true,
-      confirmButtonText: "确定",
+
+  // 显示对话框
+  reportDialogVisible.value = true;
+
+  // 等待 DOM 更新后初始化图表
+  await nextTick();
+
+  // 初始化健康状态分布图
+  if (healthChartRef.value) {
+    initHealthChart(healthChartRef.value, res.data.health);
+  }
+
+  // 初始化人口统计图
+  if (populationChartRef.value) {
+    initPopulationChart(populationChartRef.value, res.data.population);
+  }
+
+  // 初始化服务统计图
+  if (serviceChartRef.value) {
+    initServiceChart(serviceChartRef.value, res.data.service);
+  }
+};
+
+// 初始化健康状态分布图
+const initHealthChart = (chartDom: HTMLElement, healthData: any[]) => {
+  const myChart = echarts.init(chartDom);
+
+  // 提取社区名称和健康状态
+  const communities = [...new Set(healthData.map((item) => item[0]))];
+  const statuses = ["良好", "临界", "高危"];
+  const colors = ["#67c23a", "#e6a23c", "#f56c6c"];
+
+  const series = statuses.map((status, index) => ({
+    name: status,
+    type: "bar",
+    stack: "total",
+    data: communities.map((community) => {
+      const item = healthData.find(
+        (d) => d[0] === community && d[1] === status,
+      );
+      return item ? item[2] : 0;
+    }),
+    itemStyle: {
+      color: colors[index],
     },
-  );
+  }));
+
+  const option = {
+    title: {
+      text: "各社区健康状态分布",
+      left: "center",
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 600,
+        color: "#303133",
+      },
+    },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: {
+        type: "shadow",
+      },
+      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      borderColor: "#e4e7ed",
+      textStyle: {
+        color: "#606266",
+      },
+    },
+    legend: {
+      data: statuses,
+      top: 35,
+      itemWidth: 15,
+      itemHeight: 10,
+      textStyle: {
+        color: "#606266",
+      },
+    },
+    grid: {
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      top: "80px",
+      containLabel: true,
+    },
+    xAxis: {
+      type: "category",
+      data: communities,
+      axisLine: {
+        lineStyle: {
+          color: "#dcdfe6",
+        },
+      },
+      axisLabel: {
+        color: "#606266",
+      },
+    },
+    yAxis: {
+      type: "value",
+      name: "人数",
+      nameTextStyle: {
+        color: "#909399",
+      },
+      axisLine: {
+        lineStyle: {
+          color: "#dcdfe6",
+        },
+      },
+      axisLabel: {
+        color: "#606266",
+      },
+      splitLine: {
+        lineStyle: {
+          color: "#ebeef5",
+          type: "dashed",
+        },
+      },
+    },
+    series: series,
+    animationDuration: 1000,
+  };
+
+  myChart.setOption(option);
+
+  // 响应式调整
+  window.addEventListener("resize", () => myChart.resize());
+};
+
+// 初始化人口统计图
+const initPopulationChart = (chartDom: HTMLElement, populationData: any[]) => {
+  const myChart = echarts.init(chartDom);
+
+  const communities = populationData.map((item) => item.name);
+  const totalPopulations = populationData.map((item) => item.total);
+  const elderlyPopulations = populationData.map((item) => item.elderly);
+
+  const option = {
+    title: {
+      text: "各社区人口统计",
+      left: "center",
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 600,
+        color: "#303133",
+      },
+    },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: {
+        type: "shadow",
+      },
+      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      borderColor: "#e4e7ed",
+      textStyle: {
+        color: "#606266",
+      },
+    },
+    legend: {
+      data: ["总人口", "老年人口"],
+      top: 35,
+      itemWidth: 15,
+      itemHeight: 10,
+      textStyle: {
+        color: "#606266",
+      },
+    },
+    grid: {
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      top: "80px",
+      containLabel: true,
+    },
+    xAxis: {
+      type: "category",
+      data: communities,
+      axisLine: {
+        lineStyle: {
+          color: "#dcdfe6",
+        },
+      },
+      axisLabel: {
+        color: "#606266",
+      },
+    },
+    yAxis: {
+      type: "value",
+      name: "人数",
+      nameTextStyle: {
+        color: "#909399",
+      },
+      axisLine: {
+        lineStyle: {
+          color: "#dcdfe6",
+        },
+      },
+      axisLabel: {
+        color: "#606266",
+      },
+      splitLine: {
+        lineStyle: {
+          color: "#ebeef5",
+          type: "dashed",
+        },
+      },
+    },
+    series: [
+      {
+        name: "总人口",
+        type: "bar",
+        data: totalPopulations,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "#66b1ff" },
+            { offset: 1, color: "#409eff" },
+          ]),
+        },
+        barMaxWidth: 50,
+      },
+      {
+        name: "老年人口",
+        type: "bar",
+        data: elderlyPopulations,
+        itemStyle: {
+          color: new echarts.graphic.LinearGradient(0, 0, 0, 1, [
+            { offset: 0, color: "#95d475" },
+            { offset: 1, color: "#67c23a" },
+          ]),
+        },
+        barMaxWidth: 50,
+      },
+    ],
+    animationDuration: 1000,
+  };
+
+  myChart.setOption(option);
+
+  // 响应式调整
+  window.addEventListener("resize", () => myChart.resize());
+};
+
+// 初始化服务统计图
+const initServiceChart = (chartDom: HTMLElement, serviceData: any[]) => {
+  const myChart = echarts.init(chartDom);
+
+  // 提取社区和服务类型
+  const communities = [...new Set(serviceData.map((item) => item[0]))];
+  const serviceTypes = [...new Set(serviceData.map((item) => item[1]))];
+
+  // 为每个服务类型创建系列
+  const series = serviceTypes.map((serviceType) => ({
+    name: serviceType,
+    type: "bar",
+    data: communities.map((community) => {
+      const item = serviceData.find(
+        (d) => d[0] === community && d[1] === serviceType,
+      );
+      return item ? item[2] : 0;
+    }),
+  }));
+
+  const option = {
+    title: {
+      text: "各社区服务统计",
+      left: "center",
+      textStyle: {
+        fontSize: 16,
+        fontWeight: 600,
+        color: "#303133",
+      },
+    },
+    tooltip: {
+      trigger: "axis",
+      axisPointer: {
+        type: "shadow",
+      },
+      backgroundColor: "rgba(255, 255, 255, 0.95)",
+      borderColor: "#e4e7ed",
+      textStyle: {
+        color: "#606266",
+      },
+    },
+    legend: {
+      data: serviceTypes,
+      top: 35,
+      itemWidth: 15,
+      itemHeight: 10,
+      textStyle: {
+        color: "#606266",
+      },
+    },
+    grid: {
+      left: "3%",
+      right: "4%",
+      bottom: "3%",
+      top: "80px",
+      containLabel: true,
+    },
+    xAxis: {
+      type: "category",
+      data: communities,
+      axisLine: {
+        lineStyle: {
+          color: "#dcdfe6",
+        },
+      },
+      axisLabel: {
+        color: "#606266",
+      },
+    },
+    yAxis: {
+      type: "value",
+      name: "服务次数",
+      nameTextStyle: {
+        color: "#909399",
+      },
+      axisLine: {
+        lineStyle: {
+          color: "#dcdfe6",
+        },
+      },
+      axisLabel: {
+        color: "#606266",
+      },
+      splitLine: {
+        lineStyle: {
+          color: "#ebeef5",
+          type: "dashed",
+        },
+      },
+    },
+    series: series.map((s) => ({
+      ...s,
+      barMaxWidth: 40,
+      itemStyle: {
+        borderRadius: [4, 4, 0, 0],
+      },
+    })),
+    animationDuration: 1000,
+  };
+
+  myChart.setOption(option);
+
+  // 响应式调整
+  window.addEventListener("resize", () => myChart.resize());
 };
 
 // 分页与筛选
@@ -1486,6 +1859,12 @@ onMounted(() => {
   gap: 10px;
 }
 
+.stats-container {
+  display: flex;
+  justify-content: space-around;
+  gap: 10px;
+}
+
 .stat-item {
   background-color: #f9fafb;
   padding: 20px;
@@ -1493,6 +1872,8 @@ onMounted(() => {
   text-align: center;
   border-left: 4px solid #0066cc;
   transition: transform 0.2s ease;
+  flex: 1;
+  min-width: 0;
 }
 
 .stat-item:hover {
@@ -1515,6 +1896,56 @@ onMounted(() => {
 .pagination {
   display: flex;
   justify-content: flex-end;
+}
+
+/* 报表对话框样式 */
+.report-dialog :deep(.el-dialog) {
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.report-dialog :deep(.el-dialog__body) {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+}
+
+.report-container {
+  display: flex;
+  flex-direction: column;
+  gap: 30px;
+}
+
+.chart-section {
+  background: linear-gradient(135deg, #f5f7fa 0%, #ffffff 100%);
+  border-radius: 12px;
+  padding: 20px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.08);
+  transition: all 0.3s ease;
+}
+
+.chart-section:hover {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
+}
+
+.chart-title {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #303133;
+  padding-left: 12px;
+  border-left: 4px solid #409eff;
+}
+
+.chart-wrapper {
+  width: 100%;
+  height: 400px;
+}
+
+.chart-wrapper.large {
+  height: 500px;
 }
 
 /* 响应式调整 */

@@ -5,14 +5,6 @@
         <h2>AI聊天</h2>
       </div>
       <div class="header-right">
-        <el-button
-          v-if="isCaregiver"
-          type="danger"
-          @click="showEmergencyDialog"
-          icon="Warning"
-        >
-          触发异常预警
-        </el-button>
         <el-button type="primary" @click="clearChat" icon="Delete">
           清空聊天
         </el-button>

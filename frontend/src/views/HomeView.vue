@@ -5,6 +5,8 @@
         <h2>养老服务数据分析系统</h2>
       </div>
       <div class="header-right">
+        <span class="greeting-text">{{ greetingMessage }}</span>
+        <el-divider direction="vertical" />
         <el-button
           v-if="isInstitution"
           size="small"
@@ -34,6 +36,14 @@
           <el-icon><Cpu /></el-icon>
           训练模型
         </el-button>
+        <el-button
+          v-if="isCaregiver"
+          type="danger"
+          @click="showEmergencyDialog"
+          icon="Warning"
+        >
+          触发异常预警
+        </el-button>
         <el-divider direction="vertical" />
         <span class="user-name">
           <el-icon><User /></el-icon>
@@ -46,9 +56,25 @@
         </el-button>
       </div>
     </el-header>
-    <el-main>
+    <el-main class="main-content">
+      <!-- 欢迎区域 -->
+      <div class="welcome-section">
+        <div class="welcome-card">
+          <div class="welcome-icon">
+            <el-icon :size="48"><Sunrise /></el-icon>
+          </div>
+          <div class="welcome-text">
+            <h1 class="welcome-title">
+              {{ greetingMessage }}, {{ currentUser?.username || "用户" }}
+            </h1>
+            <p class="welcome-subtitle">欢迎来到养老服务数据分析平台</p>
+            <p class="welcome-desc">实时掌握养老服务动态，科学决策，精准服务</p>
+          </div>
+        </div>
+      </div>
+
       <!-- 关键指标 -->
-      <el-row :gutter="20" style="margin-bottom: 20px">
+      <el-row :gutter="20" class="metrics-section">
         <el-col :span="6">
           <el-card class="metric-card metric-senior" @click="openSeniorDetail">
             <div class="metric-content">
@@ -113,7 +139,7 @@
       </el-row>
 
       <!-- 图表区域 -->
-      <el-row :gutter="20">
+      <el-row :gutter="20" class="charts-section">
         <el-col :span="12">
           <el-card @click="openHealthDetail">
             <template #header>
@@ -303,6 +329,7 @@ import {
   Document,
   Refresh,
   Star,
+  Sunrise,
   SwitchButton,
   Tools,
   User,
@@ -317,7 +344,6 @@ const currentUser = computed(() => auth.getCurrentUser());
 const isInstitution = computed(() => currentUser.value?.role === "institution");
 const isCaregiver = computed(() => currentUser.value?.role === "caregiver");
 const isRegulatory = computed(() => currentUser.value?.role === "regulatory");
-
 // 类型定义
 interface HealthDistribution {
   values: number[];
@@ -334,6 +360,17 @@ const indicators = ref({
   service_count: 0,
   avg_satisfaction: 0,
   high_risk_count: 0,
+});
+
+// 问候语
+const greetingMessage = computed(() => {
+  const hour = new Date().getHours();
+  if (hour >= 5 && hour < 9) return "早上好";
+  if (hour >= 9 && hour < 12) return "上午好";
+  if (hour >= 12 && hour < 14) return "中午好";
+  if (hour >= 14 && hour < 18) return "下午好";
+  if (hour >= 18 && hour < 22) return "晚上好";
+  return "夜深了";
 });
 
 const router = useRouter();
@@ -1170,35 +1207,52 @@ onMounted(() => {
 <style scoped>
 .home-container {
   height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.main-content {
+  padding: 20px;
+  overflow-y: auto;
 }
 
 .header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  background: #fff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
   padding: 0 20px;
 }
 
 .header-left h2 {
   margin: 0;
-  font-size: 1.2rem;
-  color: #0066cc;
+  font-size: 1.3rem;
+  color: rgb(0, 102, 204);
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .header-right {
   display: flex;
   align-items: center;
+  gap: 10px;
+}
+
+.greeting-text {
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .user-name {
   display: flex;
   align-items: center;
   gap: 4px;
-  margin-left: 10px;
   font-size: 0.9rem;
-  color: #606266;
+  color: #fff;
+  font-weight: 500;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
 .user-name .el-icon {
@@ -1207,6 +1261,9 @@ onMounted(() => {
 
 .metric-card {
   transition: all 0.3s ease;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .metric-senior {
@@ -1270,7 +1327,7 @@ onMounted(() => {
 }
 
 .chart-container {
-  height: 400px;
+  height: 320px;
   width: 100%;
 }
 
@@ -1293,6 +1350,65 @@ onMounted(() => {
 
 .metric-action:hover {
   color: #004080;
+}
+
+/* 欢迎区域样式 */
+.welcome-section {
+  margin-bottom: 24px;
+}
+
+.welcome-card {
+  background: #fff;
+  border-radius: 12px;
+  padding: 30px 40px;
+  display: flex;
+  align-items: center;
+  gap: 24px;
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s ease;
+}
+
+.welcome-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.welcome-icon {
+  color: #333;
+  flex-shrink: 0;
+}
+
+.welcome-text {
+  flex: 1;
+}
+
+.welcome-title {
+  margin: 0 0 8px 0;
+  font-size: 1.8rem;
+  color: #333;
+  font-weight: 600;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.welcome-subtitle {
+  margin: 0 0 6px 0;
+  font-size: 1.1rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.welcome-desc {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #666;
+}
+
+.metrics-section {
+  margin-bottom: 24px;
+}
+
+.charts-section {
+  margin-bottom: 20px;
 }
 
 .metric-card {
@@ -1321,9 +1437,13 @@ onMounted(() => {
 
 .el-card {
   transition: all 0.3s ease;
+  border-radius: 10px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
 .el-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.12);
+  transform: translateY(-2px);
 }
 </style>
