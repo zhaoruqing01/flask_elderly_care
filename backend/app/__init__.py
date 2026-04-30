@@ -26,14 +26,15 @@ from app.routes import health, service, prediction, admin, indicator, auth
 from app.routes.data_routes import bp as data_bp
 from app.routes.chat_routes import bp as chat_bp
 from app.routes.common_questions import bp as common_bp
+from app.routes.auth import bp as auth_bp
 
 # 注册蓝图
+app.register_blueprint(auth_bp)
 app.register_blueprint(health.bp)
 app.register_blueprint(service.bp)
 app.register_blueprint(prediction.bp)
 app.register_blueprint(admin.bp)
 app.register_blueprint(indicator.bp)
-app.register_blueprint(auth.bp)
 app.register_blueprint(data_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(common_bp)

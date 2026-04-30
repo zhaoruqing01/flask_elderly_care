@@ -1,14 +1,18 @@
-import axios from "axios";
+import api from "./http";
 
 const CURRENT_KEY = "app_current_user";
 
 export type User = { username: string; role: string };
 
-const API_BASE = "/api/auth";
-
-export async function login(username: string, password: string): Promise<boolean> {
+export async function login(
+  username: string,
+  password: string,
+): Promise<boolean> {
   try {
-    const response = await axios.post(`${API_BASE}/login`, { username, password });
+    const response = await api.post(`/api/auth/login`, {
+      username,
+      password,
+    });
     if (response.data.user) {
       localStorage.setItem(CURRENT_KEY, JSON.stringify(response.data.user));
       return true;
@@ -20,9 +24,17 @@ export async function login(username: string, password: string): Promise<boolean
   }
 }
 
-export async function register(username: string, password: string, role: string = "caregiver"): Promise<boolean> {
+export async function register(
+  username: string,
+  password: string,
+  role: string = "caregiver",
+): Promise<boolean> {
   try {
-    const response = await axios.post(`${API_BASE}/register`, { username, password, role });
+    const response = await api.post(`/api/auth/register`, {
+      username,
+      password,
+      role,
+    });
     if (response.data.user) {
       localStorage.setItem(CURRENT_KEY, JSON.stringify(response.data.user));
       return true;

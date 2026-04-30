@@ -15,35 +15,102 @@
       <el-card style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
-            <span>数据统计</span>
+            <span>数据统计概览</span>
+            <el-button
+              v-if="isInstitution || isRegulatory"
+              type="text"
+              @click="showReportDialog"
+              >查看详细报表</el-button
+            >
           </div>
         </template>
         <el-row :gutter="20">
-          <el-col :span="6">
+          <el-col :span="4">
             <div class="stat-item">
               <div class="stat-value">{{ stats.senior_count }}</div>
               <div class="stat-label">老人总数</div>
             </div>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="4">
             <div class="stat-item">
               <div class="stat-value">{{ stats.health_records }}</div>
               <div class="stat-label">健康记录</div>
             </div>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="4">
             <div class="stat-item">
               <div class="stat-value">{{ stats.service_logs }}</div>
               <div class="stat-label">服务记录</div>
             </div>
           </el-col>
-          <el-col :span="6">
+          <el-col :span="4">
             <div class="stat-item">
               <div class="stat-value">{{ stats.communities }}</div>
               <div class="stat-label">社区数量</div>
             </div>
           </el-col>
+          <el-col :span="4">
+            <div class="stat-item">
+              <div class="stat-value">{{ stats.caregivers }}</div>
+              <div class="stat-label">护工总数</div>
+            </div>
+          </el-col>
         </el-row>
+      </el-card>
+
+      <!-- 需求预测 (所有角色可见，护工仅看本社区) -->
+      <el-card style="margin-bottom: 20px">
+        <template #header>
+          <div class="card-header">
+            <span>社区养老需求查看</span>
+          </div>
+        </template>
+        <el-table :data="predictionsData" style="width: 100%" border>
+          <el-table-column prop="community_id" label="社区ID" />
+          <el-table-column prop="service_type" label="服务类型" />
+          <el-table-column prop="prediction_date" label="预测日期" />
+          <el-table-column prop="predicted_demand" label="预测需求量" />
+        </el-table>
+      </el-card>
+
+      <!-- 社区信息管理 (仅养老机构可见) -->
+      <el-card v-if="isInstitution" style="margin-bottom: 20px">
+        <template #header>
+          <div class="card-header">
+            <span>社区信息管理</span>
+            <div class="card-header-actions">
+              <el-button
+                type="primary"
+                size="small"
+                icon="Plus"
+                @click="showAddCommunityDialog"
+              >
+                新增社区
+              </el-button>
+            </div>
+          </div>
+        </template>
+        <el-table :data="communitiesFullData" style="width: 100%" border>
+          <el-table-column prop="community_id" label="社区ID" />
+          <el-table-column prop="name" label="社区名称" />
+          <el-table-column prop="total_population" label="总人口" />
+          <el-table-column prop="elderly_population" label="老年人口" />
+          <el-table-column label="操作" width="150">
+            <template #default="scope">
+              <el-button
+                size="small"
+                @click="showEditCommunityDialog(scope.row)"
+                >修改</el-button
+              >
+              <el-button
+                size="small"
+                type="danger"
+                @click="handleDeleteCommunity(scope.row.community_id)"
+                >删除</el-button
+              >
+            </template>
+          </el-table-column>
+        </el-table>
       </el-card>
 
       <!-- 护工管理 (仅养老机构可见) -->
@@ -307,7 +374,7 @@
 <script setup lang="ts">
 import auth from "@/utils/auth";
 import axios from "@/utils/http";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { computed, onMounted, ref } from "vue";
 
 const currentUser = computed(() => auth.getCurrentUser());
@@ -319,8 +386,182 @@ const isReadOnly = computed(() => isRegulatory.value);
 // 护工与排班数据
 const caregiversData = ref([]);
 const schedulesData = ref([]);
+const predictionsData = ref([]);
+const communitiesFullData = ref([]);
 
-// 响应式数据
+// --- 弹窗逻辑 ---
+const showAddCommunityDialog = () => {
+  ElMessageBox.prompt(
+    "请输入社区信息 (格式: ID,名称,总人口,老年人口)",
+    "新增社区",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    },
+  ).then(async ({ value }) => {
+    const [id, name, total, elderly] = value.split(",");
+    await axios.post("/api/data/communities", {
+      community_id: id,
+      name,
+      total_population: parseInt(total),
+      elderly_population: parseInt(elderly),
+    });
+    refreshData();
+  });
+};
+
+const showEditCommunityDialog = (row: any) => {
+  ElMessageBox.prompt(
+    "请修改社区信息 (格式: 名称,总人口,老年人口)",
+    "修改社区",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+      inputValue: `${row.name},${row.total_population},${row.elderly_population}`,
+    },
+  ).then(async ({ value }) => {
+    const [name, total, elderly] = value.split(",");
+    await axios.put(`/api/data/communities/${row.community_id}`, {
+      name,
+      total_population: parseInt(total),
+      elderly_population: parseInt(elderly),
+    });
+    refreshData();
+  });
+};
+
+const handleDeleteCommunity = (id: string) => {
+  ElMessageBox.confirm("确定删除该社区吗？", "提示", { type: "warning" }).then(
+    async () => {
+      try {
+        await axios.delete(`/api/data/communities/${id}`);
+        refreshData();
+      } catch (e: any) {
+        ElMessage.error(e.response?.data?.error || "删除失败");
+      }
+    },
+  );
+};
+
+const showAddElderlyDialog = () => {
+  ElMessageBox.prompt(
+    "请输入老人信息 (格式: ID,姓名,年龄,性别,社区ID)",
+    "新增老人",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    },
+  ).then(async ({ value }) => {
+    const [id, name, age, gender, commId] = value.split(",");
+    await axios.post("/api/data/seniors", {
+      elderly_id: id,
+      name,
+      age: parseInt(age),
+      gender,
+      community_id: commId,
+    });
+    refreshData();
+  });
+};
+
+const showAddCaregiverDialog = () => {
+  ElMessageBox.prompt(
+    "请输入护工信息 (格式: ID,姓名,社区ID,资质)",
+    "新增护工",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    },
+  ).then(async ({ value }) => {
+    const [id, name, commId, qual] = value.split(",");
+    await axios.post("/api/data/caregivers", {
+      caregiver_id: id,
+      name,
+      community_id: commId,
+      qualification: qual,
+    });
+    refreshData();
+  });
+};
+
+const showAddScheduleDialog = () => {
+  ElMessageBox.prompt(
+    "请输入排班信息 (格式: 护工ID,老人ID,类型,日期,时段)",
+    "新增排班",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    },
+  ).then(async ({ value }) => {
+    const [cgId, eId, type, date, slot] = value.split(",");
+    await axios.post("/api/data/schedules", {
+      caregiver_id: cgId,
+      elderly_id: eId,
+      service_type: type,
+      service_date: date,
+      service_time_slot: slot,
+    });
+    refreshData();
+  });
+};
+
+const showAddHealthRecordDialog = () => {
+  ElMessageBox.prompt(
+    "请输入健康记录 (格式: 老人ID,日期,高压,低压,血糖,心率,状态)",
+    "上报健康记录",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    },
+  ).then(async ({ value }) => {
+    const [eId, date, sbp, dbp, sugar, hr, status] = value.split(",");
+    await axios.post("/api/data/health-records", {
+      elderly_id: eId,
+      record_date: date,
+      sbp: parseInt(sbp),
+      dbp: parseInt(dbp),
+      blood_sugar: parseFloat(sugar),
+      heart_rate: parseInt(hr),
+      health_status: status,
+    });
+    refreshData();
+  });
+};
+
+const showAddServiceRecordDialog = () => {
+  ElMessageBox.prompt(
+    "请输入服务记录 (格式: 老人ID,社区ID,类型,日期,时长,满意度,护工ID)",
+    "提交服务记录",
+    {
+      confirmButtonText: "确定",
+      cancelButtonText: "取消",
+    },
+  ).then(async ({ value }) => {
+    const [eId, commId, type, date, dur, sat, cgId] = value.split(",");
+    await axios.post("/api/data/service-records", {
+      elderly_id: eId,
+      community_id: commId,
+      service_type: type,
+      service_date: date,
+      duration: parseInt(dur),
+      satisfaction: parseInt(sat),
+      caregiver_id: cgId,
+    });
+    refreshData();
+  });
+};
+
+const showReportDialog = async () => {
+  const res = await axios.get("/api/data/reports/community");
+  ElMessageBox.alert(JSON.stringify(res.data, null, 2), "社区全景统计报表", {
+    customClass: "report-msgbox",
+  });
+};
+
+const communities = ref([]);
+const services = ref([]);
+
+// 响应式统计数据
 const stats = ref({
   senior_count: 0,
   health_records: 0,
@@ -329,26 +570,23 @@ const stats = ref({
   caregivers: 0,
 });
 
-const communities = ref([]);
-const services = ref([]);
-
 // 表格数据
 const seniorsData = ref([]);
+const totalSeniors = ref(0);
 const healthRecords = ref([]);
+const totalHealthRecords = ref(0);
 const serviceRecords = ref([]);
+const totalServiceRecords = ref(0);
 
 // 分页数据
 const currentPage = ref(1);
 const pageSize = ref(20);
-const totalSeniors = ref(0);
 
 const healthCurrentPage = ref(1);
 const healthPageSize = ref(20);
-const totalHealthRecords = ref(0);
 
 const serviceCurrentPage = ref(1);
 const servicePageSize = ref(20);
-const totalServiceRecords = ref(0);
 
 // 筛选条件
 const tableFilter = ref("all");
@@ -459,7 +697,11 @@ const refreshData = async () => {
     await loadStats();
 
     const commRes = await axios.get("/api/data/communities");
+    communitiesFullData.value = commRes.data;
     communities.value = commRes.data.map((c: any) => c.name);
+
+    const predRes = await axios.get("/api/data/predictions");
+    predictionsData.value = predRes.data;
 
     if (isInstitution.value || isCaregiver.value) {
       const cgRes = await axios.get("/api/data/caregivers");

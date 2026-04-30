@@ -124,6 +124,78 @@ class DataService:
         """新增服务记录"""
         query = "INSERT INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
         db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction'], data['caregiver_id']))
+
+    # --- 预测结果管理 ---
+    def get_predictions(self, community_id=None, service_type=None):
+        """获取预测需求结果"""
+        query = "SELECT community_id, service_type, prediction_date, predicted_demand FROM prediction_result"
+        params = []
+        conditions = []
+        if community_id:
+            conditions.append("community_id = ?")
+            params.append(community_id)
+        if service_type:
+            conditions.append("service_type = ?")
+            params.append(service_type)
+        
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        
+        result = db.execute(query, params)
+        return [{
+            'community_id': r[0],
+            'service_type': r[1],
+            'prediction_date': r[2],
+            'predicted_demand': r[3]
+        } for r in result]
+
+    # --- 统计报表功能 ---
+    def get_community_stats(self, community_id=None):
+        """获取社区全景统计数据"""
+        stats = {}
+        
+        # 1. 人口统计
+        pop_query = "SELECT community_id, name, total_population, elderly_population FROM community"
+        if community_id:
+            pop_query += " WHERE community_id = ?"
+            pop_res = db.execute(pop_query, (community_id,))
+        else:
+            pop_res = db.execute(pop_query)
+        
+        stats['population'] = [{
+            'community_id': r[0], 'name': r[1], 'total': r[2], 'elderly': r[3]
+        } for r in pop_res]
+
+        # 2. 健康统计
+        health_query = """
+            SELECT e.community_id, hr.health_status, COUNT(*) 
+            FROM health_record hr 
+            JOIN elderly e ON hr.elderly_id = e.elderly_id 
+            GROUP BY e.community_id, hr.health_status
+        """
+        health_res = db.execute(health_query)
+        stats['health'] = health_res
+
+        # 3. 服务统计
+        service_query = """
+            SELECT community_id, service_type, COUNT(*), AVG(satisfaction)
+            FROM service_record
+            GROUP BY community_id, service_type
+        """
+        service_res = db.execute(service_query)
+        stats['service'] = service_res
+
+        return stats
+
+    # --- 审核与状态变更 ---
+    def update_schedule_status(self, schedule_id, status):
+        """更新排班/订单状态 (审核用)"""
+        db.execute("UPDATE schedule SET status = ? WHERE id = ?", (status, schedule_id))
+
+    def update_service_record(self, record_id, data):
+        """修改服务记录 (审核/修正用)"""
+        query = "UPDATE service_record SET duration=?, satisfaction=? WHERE id=?"
+        db.execute(query, (data['duration'], data['satisfaction'], record_id))
     
     def get_seniors(self, page=1, page_size=20, community=''):
         """

@@ -56,6 +56,24 @@ def add_community_api():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+@bp.route('/communities/<string:community_id>', methods=['PUT'])
+@roles_required('institution')
+def update_community_api(community_id):
+    try:
+        data_service.update_community(community_id, request.json)
+        return jsonify({'message': '更新成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/communities/<string:community_id>', methods=['DELETE'])
+@roles_required('institution')
+def delete_community_api(community_id):
+    try:
+        data_service.delete_community(community_id)
+        return jsonify({'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
 # --- 老人管理接口 ---
 @bp.route('/seniors', methods=['POST'])
 @roles_required('institution', 'caregiver')
@@ -63,6 +81,49 @@ def add_elderly_api():
     try:
         data_service.add_elderly(request.json)
         return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/seniors/<string:elderly_id>', methods=['PUT'])
+@roles_required('institution', 'caregiver')
+def update_elderly_api(elderly_id):
+    try:
+        data_service.update_elderly(elderly_id, request.json)
+        return jsonify({'message': '更新成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/seniors/<string:elderly_id>', methods=['DELETE'])
+@roles_required('institution')
+def delete_elderly_api(elderly_id):
+    try:
+        data_service.delete_elderly(elderly_id)
+        return jsonify({'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# --- 预测与统计接口 ---
+@bp.route('/predictions', methods=['GET'])
+@roles_required('institution', 'caregiver', 'regulatory')
+def get_predictions_api():
+    community_id = request.args.get('community_id')
+    service_type = request.args.get('service_type')
+    return jsonify(data_service.get_predictions(community_id, service_type))
+
+@bp.route('/reports/community', methods=['GET'])
+@roles_required('institution', 'regulatory')
+def get_community_reports_api():
+    community_id = request.args.get('community_id')
+    return jsonify(data_service.get_community_stats(community_id))
+
+# --- 审核接口 ---
+@bp.route('/schedules/<int:schedule_id>/status', methods=['PATCH'])
+@roles_required('institution')
+def update_schedule_status_api(schedule_id):
+    try:
+        status = request.json.get('status')
+        data_service.update_schedule_status(schedule_id, status)
+        return jsonify({'message': '审核成功'})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 

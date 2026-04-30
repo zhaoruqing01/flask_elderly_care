@@ -8,3 +8,4 @@ from . import service
 from . import prediction
 from . import admin
 from . import indicator
+from . import auth

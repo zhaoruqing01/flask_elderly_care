@@ -1,4 +1,3 @@
-import auth from "@/utils/auth";
 import type { RouteRecordRaw } from "vue-router";
 import { createRouter, createWebHistory } from "vue-router";
 
@@ -81,13 +80,13 @@ const router = createRouter({
   routes,
 });
 
-router.beforeEach((to, _from, next) => {
-  document.title = `${to.meta.title || "养老服务数据分析系统"} - 养老服务数据分析系统`;
-  if (to.path !== "/login" && !auth.isAuthenticated()) {
-    next({ path: "/login" });
-  } else {
-    next();
-  }
-});
+// router.beforeEach((to, _from, next) => {
+//   document.title = `${to.meta.title || "养老服务数据分析系统"} - 养老服务数据分析系统`;
+//   if (to.path !== "/login" ) {
+//     next({ path: "/login" });
+//   } else {
+//     next();
+//   }
+// });
 
 export default router;

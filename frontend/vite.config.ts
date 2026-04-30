@@ -11,23 +11,12 @@ export default defineConfig({
     },
   },
   server: {
+    cors: true,
     port: 5173,
     open: true,
     proxy: {
       "/api": {
-        target: "http://192.168.119.128:5008",
-        changeOrigin: true,
-      },
-      "/generate": {
-        target: "http://192.168.119.128:5008",
-        changeOrigin: true,
-      },
-      "/clean": {
-        target: "http://192.168.119.128:5008",
-        changeOrigin: true,
-      },
-      "/train": {
-        target: "http://192.168.119.128:5008",
+        target: "http://192.168.119.129:5008",
         changeOrigin: true,
       },
     },
