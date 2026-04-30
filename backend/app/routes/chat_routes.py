@@ -14,6 +14,22 @@ from app import app
 # 创建蓝图
 bp = Blueprint('chat', __name__, url_prefix='/api/chat')
 
+@bp.route('/emergency', methods=['POST'])
+def handle_emergency():
+    """处理紧急预警"""
+    try:
+        data = request.json
+        content = data.get('content')
+        sender = data.get('sender')
+        
+        # 实际业务中应存入数据库预警表或发送实时推送
+        # 这里记录到日志中并返回成功
+        app.logger.warning(f"EMERGENCY ALERT from {sender}: {content}")
+        
+        return jsonify({'message': '预警已接收', 'status': 'received'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
 # 数据库连接函数
 def get_db():
     """获取数据库连接"""

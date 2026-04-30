@@ -6,11 +6,17 @@
       </div>
       <div class="header-right">
         <el-tag type="primary">模拟数据</el-tag>
-        <el-button size="small" @click="generateData" style="margin-left: 10px">
+        <el-button
+          v-if="isInstitution"
+          size="small"
+          @click="generateData"
+          style="margin-left: 10px"
+        >
           <el-icon><Refresh /></el-icon>
           生成数据
         </el-button>
         <el-button
+          v-if="isInstitution"
           size="small"
           type="primary"
           @click="cleanData"
@@ -20,6 +26,7 @@
           清洗数据
         </el-button>
         <el-button
+          v-if="isInstitution"
           size="small"
           type="success"
           @click="trainModel"
@@ -27,14 +34,6 @@
         >
           <el-icon><Cpu /></el-icon>
           训练模型
-        </el-button>
-        <el-button
-          size="small"
-          type="danger"
-          @click="logout"
-          style="margin-left: 10px"
-        >
-          退出登录
         </el-button>
       </div>
     </el-header>
@@ -55,7 +54,10 @@
           </el-card>
         </el-col>
         <el-col :span="6">
-          <el-card class="metric-card metric-service" @click="openServiceDetail">
+          <el-card
+            class="metric-card metric-service"
+            @click="openServiceDetail"
+          >
             <div class="metric-content">
               <el-icon class="metric-icon service-icon"><Document /></el-icon>
               <div class="metric-label">服务总数</div>
@@ -68,7 +70,10 @@
           </el-card>
         </el-col>
         <el-col :span="6">
-          <el-card class="metric-card metric-satisfaction" @click="openSatisfactionDetail">
+          <el-card
+            class="metric-card metric-satisfaction"
+            @click="openSatisfactionDetail"
+          >
             <div class="metric-content">
               <el-icon class="metric-icon satisfaction-icon"><Star /></el-icon>
               <div class="metric-label">平均满意度</div>
@@ -81,7 +86,10 @@
           </el-card>
         </el-col>
         <el-col :span="6">
-          <el-card class="metric-card metric-high-risk" @click="openHighRiskDetail">
+          <el-card
+            class="metric-card metric-high-risk"
+            @click="openHighRiskDetail"
+          >
             <div class="metric-content">
               <el-icon class="metric-icon high-risk-icon"><Warning /></el-icon>
               <div class="metric-label">高危人数</div>
@@ -280,11 +288,25 @@
 <script setup lang="ts">
 import auth from "@/utils/auth";
 import axios from "@/utils/http";
-import { ArrowRight, Cpu, Refresh, Tools } from "@element-plus/icons-vue";
+import {
+  ArrowRight,
+  Cpu,
+  Document,
+  Refresh,
+  Star,
+  Tools,
+  User,
+  Warning,
+} from "@element-plus/icons-vue";
 import * as echarts from "echarts";
 import { ElMessage } from "element-plus";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
+
+const currentUser = computed(() => auth.getCurrentUser());
+const isInstitution = computed(() => currentUser.value?.role === "institution");
+const isCaregiver = computed(() => currentUser.value?.role === "caregiver");
+const isRegulatory = computed(() => currentUser.value?.role === "regulatory");
 
 // 类型定义
 interface HealthDistribution {

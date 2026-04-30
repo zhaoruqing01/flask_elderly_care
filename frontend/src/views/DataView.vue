@@ -46,12 +46,75 @@
         </el-row>
       </el-card>
 
+      <!-- 护工管理 (仅养老机构可见) -->
+      <el-card v-if="isInstitution" style="margin-bottom: 20px">
+        <template #header>
+          <div class="card-header">
+            <span>护工管理</span>
+            <div class="card-header-actions">
+              <el-button
+                type="success"
+                size="small"
+                icon="Plus"
+                @click="showAddCaregiverDialog"
+              >
+                新增护工
+              </el-button>
+            </div>
+          </div>
+        </template>
+        <el-table :data="caregiversData" style="width: 100%" border>
+          <el-table-column prop="caregiver_id" label="护工ID" />
+          <el-table-column prop="name" label="姓名" />
+          <el-table-column prop="community_id" label="所属社区" />
+          <el-table-column prop="qualification" label="资质" />
+        </el-table>
+      </el-card>
+
+      <!-- 排班管理 (养老机构可见管理，护工可见自身) -->
+      <el-card v-if="isInstitution || isCaregiver" style="margin-bottom: 20px">
+        <template #header>
+          <div class="card-header">
+            <span>排班管理</span>
+            <div class="card-header-actions">
+              <el-button
+                v-if="isInstitution"
+                type="warning"
+                size="small"
+                icon="Plus"
+                @click="showAddScheduleDialog"
+              >
+                新增排班
+              </el-button>
+            </div>
+          </div>
+        </template>
+        <el-table :data="schedulesData" style="width: 100%" border>
+          <el-table-column prop="caregiver_id" label="护工ID" />
+          <el-table-column prop="elderly_id" label="老人ID" />
+          <el-table-column prop="service_type" label="服务类型" />
+          <el-table-column prop="service_date" label="服务日期" />
+          <el-table-column prop="service_time_slot" label="时间段" />
+          <el-table-column prop="status" label="状态" />
+        </el-table>
+      </el-card>
+
       <!-- 数据表格 -->
       <el-card style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
             <span>老人基本信息</span>
             <div class="card-header-actions">
+              <el-button
+                v-if="isInstitution"
+                type="primary"
+                size="small"
+                icon="Plus"
+                @click="showAddElderlyDialog"
+                style="margin-right: 10px"
+              >
+                新增老人
+              </el-button>
               <el-select
                 v-model="tableFilter"
                 placeholder="按社区筛选"
@@ -106,6 +169,16 @@
           <div class="card-header">
             <span>健康记录</span>
             <div class="card-header-actions">
+              <el-button
+                v-if="isCaregiver"
+                type="danger"
+                size="small"
+                icon="Plus"
+                @click="showAddHealthRecordDialog"
+                style="margin-right: 10px"
+              >
+                上报健康记录
+              </el-button>
               <el-date-picker
                 v-model="dateRange"
                 type="daterange"
@@ -164,6 +237,16 @@
           <div class="card-header">
             <span>服务记录</span>
             <div class="card-header-actions">
+              <el-button
+                v-if="isCaregiver"
+                type="info"
+                size="small"
+                icon="Plus"
+                @click="showAddServiceRecordDialog"
+                style="margin-right: 10px"
+              >
+                提交服务记录
+              </el-button>
               <el-select
                 v-model="serviceTypeFilter"
                 placeholder="按服务类型筛选"
@@ -222,9 +305,20 @@
 </template>
 
 <script setup lang="ts">
+import auth from "@/utils/auth";
 import axios from "@/utils/http";
 import { ElMessage } from "element-plus";
-import { onMounted, ref } from "vue";
+import { computed, onMounted, ref } from "vue";
+
+const currentUser = computed(() => auth.getCurrentUser());
+const isInstitution = computed(() => currentUser.value?.role === "institution");
+const isCaregiver = computed(() => currentUser.value?.role === "caregiver");
+const isRegulatory = computed(() => currentUser.value?.role === "regulatory");
+const isReadOnly = computed(() => isRegulatory.value);
+
+// 护工与排班数据
+const caregiversData = ref([]);
+const schedulesData = ref([]);
 
 // 响应式数据
 const stats = ref({
@@ -232,6 +326,7 @@ const stats = ref({
   health_records: 0,
   service_logs: 0,
   communities: 0,
+  caregivers: 0,
 });
 
 const communities = ref([]);
@@ -359,13 +454,35 @@ const loadServices = async () => {
 };
 
 // 刷新数据
-const refreshData = () => {
-  loadStats();
-  loadSeniorsData();
-  loadHealthRecords();
-  loadServiceRecords();
-  loadCommunities();
-  loadServices();
+const refreshData = async () => {
+  try {
+    await loadStats();
+
+    const commRes = await axios.get("/api/data/communities");
+    communities.value = commRes.data.map((c: any) => c.name);
+
+    if (isInstitution.value || isCaregiver.value) {
+      const cgRes = await axios.get("/api/data/caregivers");
+      caregiversData.value = cgRes.data;
+
+      const schRes = await axios.get("/api/data/schedules", {
+        params: isCaregiver.value
+          ? { caregiver_id: currentUser.value?.username }
+          : {},
+      });
+      schedulesData.value = schRes.data;
+    }
+
+    await loadSeniorsData();
+    await loadHealthRecords();
+    await loadServiceRecords();
+    await loadServices();
+
+    ElMessage.success("数据已刷新");
+  } catch (error) {
+    console.error("刷新数据失败:", error);
+    ElMessage.error("数据加载失败");
+  }
 };
 
 // 导出数据

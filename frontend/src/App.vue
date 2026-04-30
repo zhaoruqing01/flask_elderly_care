@@ -1,10 +1,9 @@
 <template>
   <el-container class="app-container">
-    <!-- 侧边栏 -->
     <el-aside v-if="!isLogin" width="240px" class="sidebar">
       <div class="sidebar-header">
         <h3>养老服务数据分析系统</h3>
-        <p>智能预测与资源管理</p>
+        <p v-if="currentUser">{{ currentUser.username }} ({{ roleName }})</p>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -16,29 +15,40 @@
           <el-icon><HomeFilled /></el-icon>
           <span>首页</span>
         </el-menu-item>
+
         <el-menu-item index="/health">
           <el-icon><Document /></el-icon>
           <span>健康分析</span>
         </el-menu-item>
+
         <el-menu-item index="/service">
           <el-icon><Setting /></el-icon>
           <span>服务分析</span>
         </el-menu-item>
-        <el-menu-item index="/prediction">
+
+        <el-menu-item v-if="canSeePrediction" index="/prediction">
           <el-icon><TrendCharts /></el-icon>
           <span>需求预测</span>
         </el-menu-item>
+
         <el-menu-item index="/data">
           <el-icon><DataAnalysis /></el-icon>
           <span>数据管理</span>
         </el-menu-item>
-        <el-menu-item index="/chat">
+
+        <el-menu-item v-if="canSeeChat" index="/chat">
           <el-icon><ChatDotRound /></el-icon>
           <span>AI聊天</span>
         </el-menu-item>
-        <el-menu-item index="/admin">
+
+        <el-menu-item v-if="canSeeAdmin" index="/admin">
           <el-icon><Tools /></el-icon>
           <span>系统管理</span>
+        </el-menu-item>
+
+        <el-menu-item @click="handleLogout" style="margin-top: 20px">
+          <el-icon><SwitchButton /></el-icon>
+          <span>退出登录</span>
         </el-menu-item>
       </el-menu>
     </el-aside>
@@ -57,24 +67,57 @@
 </template>
 
 <script setup lang="ts">
+import auth from "@/utils/auth";
 import {
+  ChatDotRound,
   DataAnalysis,
   Document,
   HomeFilled,
   Setting,
+  SwitchButton,
   Tools,
   TrendCharts,
 } from "@element-plus/icons-vue";
 import { computed } from "vue";
-import { useRoute } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
+const router = useRouter();
+
+const currentUser = computed(() => auth.getCurrentUser());
+
+const roleName = computed(() => {
+  const role = currentUser.value?.role;
+  if (role === "institution") return "养老机构";
+  if (role === "caregiver") return "护工";
+  if (role === "regulatory") return "监管部门";
+  return "未知角色";
+});
+
+const canSeePrediction = computed(() => {
+  const role = currentUser.value?.role;
+  return role === "institution" || role === "regulatory";
+});
+
+const canSeeChat = computed(() => {
+  const role = currentUser.value?.role;
+  return role === "institution" || role === "caregiver";
+});
+
+const canSeeAdmin = computed(() => {
+  return currentUser.value?.role === "institution";
+});
 
 const activeMenu = computed(() => {
   return route.path;
 });
 
 const isLogin = computed(() => route.path === "/login");
+
+function handleLogout() {
+  auth.logout();
+  router.push("/login");
+}
 </script>
 
 <style>

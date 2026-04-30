@@ -9,50 +9,113 @@ import pandas as pd
 import io
 import traceback
 
+from app.services.data_service import DataService
+from functools import wraps
+
 # 创建蓝图
 bp = Blueprint('data', __name__, url_prefix='/api/data')
 
-# 数据库连接函数
-def get_db():
-    """获取数据库连接"""
-    conn = sqlite3.connect(current_app.config['DATABASE_PATH'])
-    conn.row_factory = sqlite3.Row
-    return conn
+# 数据服务实例
+data_service = DataService()
+
+def roles_required(*roles):
+    """角色验证装饰器"""
+    def decorator(f):
+        @wraps(f)
+        def decorated_function(*args, **kwargs):
+            # 这里暂时通过参数模拟，实际应配合Token/Session
+            role = request.args.get('role') or request.headers.get('X-User-Role')
+            if not role:
+                return jsonify({'error': '未授权'}), 401
+            if role not in roles:
+                return jsonify({'error': '权限不足'}), 403
+            return f(*args, **kwargs)
+        return decorated_function
+    return decorator
 
 @bp.route('/stats')
-def get_data_stats():
+def get_data_stats_api():
     """获取数据统计信息"""
     try:
-        conn = get_db()
-        cursor = conn.cursor()
-        
-        # 统计老人总数
-        cursor.execute('SELECT COUNT(*) FROM elderly')
-        senior_count = cursor.fetchone()[0]
-        
-        # 统计健康记录数
-        cursor.execute('SELECT COUNT(*) FROM health_record')
-        health_records = cursor.fetchone()[0]
-        
-        # 统计服务记录数
-        cursor.execute('SELECT COUNT(*) FROM service_record')
-        service_logs = cursor.fetchone()[0]
-        
-        # 统计社区数量
-        cursor.execute('SELECT COUNT(DISTINCT community_id) FROM elderly')
-        communities = cursor.fetchone()[0]
-        
-        conn.close()
-        
-        return jsonify({
-            'senior_count': senior_count,
-            'health_records': health_records,
-            'service_logs': service_logs,
-            'communities': communities
-        })
+        stats = data_service.get_data_stats()
+        return jsonify(stats)
     except Exception as e:
-        print(f"获取数据统计失败: {e}")
-        return jsonify({'error': '获取数据统计失败'}), 500
+        return jsonify({'error': str(e)}), 500
+
+# --- 社区管理接口 ---
+@bp.route('/communities', methods=['GET'])
+def get_communities_api():
+    return jsonify(data_service.get_communities())
+
+@bp.route('/communities', methods=['POST'])
+@roles_required('institution')
+def add_community_api():
+    try:
+        data_service.add_community(request.json)
+        return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# --- 老人管理接口 ---
+@bp.route('/seniors', methods=['POST'])
+@roles_required('institution', 'caregiver')
+def add_elderly_api():
+    try:
+        data_service.add_elderly(request.json)
+        return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# --- 护工管理接口 ---
+@bp.route('/caregivers', methods=['GET'])
+def get_caregivers_api():
+    community_id = request.args.get('community_id')
+    return jsonify(data_service.get_caregivers(community_id))
+
+@bp.route('/caregivers', methods=['POST'])
+@roles_required('institution')
+def add_caregiver_api():
+    try:
+        data_service.add_caregiver(request.json)
+        return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# --- 排班管理接口 ---
+@bp.route('/schedules', methods=['GET'])
+def get_schedules_api():
+    caregiver_id = request.args.get('caregiver_id')
+    elderly_id = request.args.get('elderly_id')
+    return jsonify(data_service.get_schedules(caregiver_id, elderly_id))
+
+@bp.route('/schedules', methods=['POST'])
+@roles_required('institution')
+def add_schedule_api():
+    try:
+        data_service.add_schedule(request.json)
+        return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# --- 健康记录接口 ---
+@bp.route('/health-records', methods=['POST'])
+@roles_required('caregiver')
+def add_health_record_api():
+    try:
+        data_service.add_health_record(request.json)
+        return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+# --- 服务记录接口 ---
+@bp.route('/service-records', methods=['POST'])
+@roles_required('caregiver')
+def add_service_record_api():
+    try:
+        data_service.add_service_record(request.json)
+        return jsonify({'message': '添加成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 @bp.route('/seniors')
 def get_seniors():

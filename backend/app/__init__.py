@@ -22,7 +22,7 @@ app.config['MODEL_PATH'] = os.path.join(os.path.dirname(os.path.dirname(__file__
 os.makedirs(app.config['MODEL_PATH'], exist_ok=True)
 
 # 导入路由
-from app.routes import health, service, prediction, admin, indicator
+from app.routes import health, service, prediction, admin, indicator, auth
 from app.routes.data_routes import bp as data_bp
 from app.routes.chat_routes import bp as chat_bp
 from app.routes.common_questions import bp as common_bp
@@ -33,6 +33,7 @@ app.register_blueprint(service.bp)
 app.register_blueprint(prediction.bp)
 app.register_blueprint(admin.bp)
 app.register_blueprint(indicator.bp)
+app.register_blueprint(auth.bp)
 app.register_blueprint(data_bp)
 app.register_blueprint(chat_bp)
 app.register_blueprint(common_bp)

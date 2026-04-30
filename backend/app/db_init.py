@@ -24,18 +24,35 @@ def init_db():
     conn = sqlite3.connect(db_path)
     cursor = conn.cursor()
     
-    # 创建老人表（兼容旧表名 seniors 与新表 elderly）
+    # 删除旧表以重建新结构
+    tables_to_drop = ['users', 'community', 'elderly', 'caregiver', 'schedule', 'health_record', 'service_record', 'prediction_result']
+    for table in tables_to_drop:
+        cursor.execute(f"DROP TABLE IF EXISTS {table}")
+
+    # 1. 用户表 (RBAC)
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS seniors (
+    CREATE TABLE IF NOT EXISTS users (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        age INTEGER,
-        community_id TEXT,
-        health_status TEXT,
-        service_count INTEGER,
-        avg_satisfaction REAL
+        username TEXT UNIQUE,
+        password TEXT,
+        role TEXT, -- 'institution', 'caregiver', 'regulatory'
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
     ''')
 
+    # 2. 社区表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS community (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        community_id TEXT UNIQUE,
+        name TEXT,
+        total_population INTEGER,
+        elderly_population INTEGER,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )
+    ''')
+
+    # 3. 老人表 (elderly)
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS elderly (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -44,25 +61,41 @@ def init_db():
         age INTEGER,
         gender TEXT,
         community_id TEXT,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (community_id) REFERENCES community (community_id)
     )
     ''')
     
-    # 创建健康记录表（兼容 health_records 与 health_record）
+    # 4. 护工表
     cursor.execute('''
-    CREATE TABLE IF NOT EXISTS health_records (
+    CREATE TABLE IF NOT EXISTS caregiver (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
-        senior_id INTEGER,
-        date TEXT,
-        sbp INTEGER,
-        dbp INTEGER,
-        blood_sugar REAL,
-        heart_rate INTEGER,
-        health_status TEXT,
-        FOREIGN KEY (senior_id) REFERENCES seniors (id)
+        caregiver_id TEXT UNIQUE,
+        name TEXT,
+        community_id TEXT,
+        qualification TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (community_id) REFERENCES community (community_id)
     )
     ''')
 
+    # 5. 护工排班表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS schedule (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        caregiver_id TEXT,
+        elderly_id TEXT,
+        service_type TEXT,
+        service_date TEXT,
+        service_time_slot TEXT,
+        status TEXT DEFAULT 'pending', -- 'pending', 'completed', 'cancelled'
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (caregiver_id) REFERENCES caregiver (caregiver_id),
+        FOREIGN KEY (elderly_id) REFERENCES elderly (elderly_id)
+    )
+    ''')
+
+    # 6. 健康记录表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS health_record (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -72,24 +105,12 @@ def init_db():
         dbp INTEGER,
         blood_sugar REAL,
         heart_rate INTEGER,
-        health_status TEXT
+        health_status TEXT,
+        FOREIGN KEY (elderly_id) REFERENCES elderly (elderly_id)
     )
     ''')
     
-    # 创建服务记录表（兼容 service_records 与 service_record）
-    cursor.execute('''
-    CREATE TABLE IF NOT EXISTS service_records (
-        id INTEGER PRIMARY KEY AUTOINCREMENT,
-        senior_id INTEGER,
-        service_date TEXT,
-        service_type TEXT,
-        duration INTEGER,
-        satisfaction INTEGER,
-        community_id TEXT,
-        FOREIGN KEY (senior_id) REFERENCES seniors (id)
-    )
-    ''')
-
+    # 7. 服务记录表
     cursor.execute('''
     CREATE TABLE IF NOT EXISTS service_record (
         id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -98,74 +119,49 @@ def init_db():
         service_type TEXT,
         service_date TEXT,
         duration INTEGER,
-        satisfaction INTEGER
+        satisfaction INTEGER,
+        caregiver_id TEXT,
+        FOREIGN KEY (elderly_id) REFERENCES elderly (elderly_id),
+        FOREIGN KEY (community_id) REFERENCES community (community_id),
+        FOREIGN KEY (caregiver_id) REFERENCES caregiver (caregiver_id)
     )
     ''')
-    
-    # 在插入兼容表之前，确保兼容表的列存在（对存在的旧表进行列补齐）
-    def ensure_columns(table_name, cols):
-        try:
-            cursor.execute(f"PRAGMA table_info({table_name})")
-            existing = [r[1] for r in cursor.fetchall()]
-        except Exception:
-            existing = []
-        for col_name, col_def in cols.items():
-            if col_name not in existing:
-                try:
-                    cursor.execute(f"ALTER TABLE {table_name} ADD COLUMN {col_name} {col_def}")
-                except Exception:
-                    # 如果表不存在或无法添加，忽略并继续
-                    pass
 
-    # health_record 需要的列
-    ensure_columns('health_record', {
-        'elderly_id': 'TEXT',
-        'record_date': 'TEXT',
-        'sbp': 'INTEGER',
-        'dbp': 'INTEGER',
-        'blood_sugar': 'REAL',
-        'heart_rate': 'INTEGER',
-        'health_status': 'TEXT'
-    })
+    # 8. 预测结果表
+    cursor.execute('''
+    CREATE TABLE IF NOT EXISTS prediction_result (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        community_id TEXT,
+        service_type TEXT,
+        prediction_date TEXT,
+        predicted_demand REAL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (community_id) REFERENCES community (community_id)
+    )
+    ''')
 
-    # service_record 需要的列
-    ensure_columns('service_record', {
-        'elderly_id': 'TEXT',
-        'community_id': 'TEXT',
-        'service_type': 'TEXT',
-        'service_date': 'TEXT',
-        'duration': 'INTEGER',
-        'satisfaction': 'INTEGER'
-    })
+    # 兼容旧表 seniors 和 health_records, service_records
+    cursor.execute('CREATE TABLE IF NOT EXISTS seniors (id INTEGER PRIMARY KEY AUTOINCREMENT, age INTEGER, community_id TEXT, health_status TEXT, service_count INTEGER, avg_satisfaction REAL)')
+    cursor.execute('CREATE TABLE IF NOT EXISTS health_records (id INTEGER PRIMARY KEY AUTOINCREMENT, senior_id INTEGER, date TEXT, sbp INTEGER, dbp INTEGER, blood_sugar REAL, heart_rate INTEGER, health_status TEXT)')
+    cursor.execute('CREATE TABLE IF NOT EXISTS service_records (id INTEGER PRIMARY KEY AUTOINCREMENT, senior_id INTEGER, service_date TEXT, service_type TEXT, duration INTEGER, satisfaction INTEGER, community_id TEXT)')
 
-    # elderly 需要的列
-    ensure_columns('elderly', {
-        'elderly_id': 'TEXT',
-        'name': 'TEXT',
-        'age': 'INTEGER',
-        'gender': 'TEXT',
-        'community_id': 'TEXT'
-    })
-
-    # 插入初始数据
-    # 插入老人数据
-    seniors_data = [
-        (65, '社区A', '良好', 5, 4.5),
-        (72, '社区A', '临界', 8, 4.2),
-        (68, '社区B', '良好', 3, 4.8),
-        (75, '社区B', '高危', 10, 4.0),
-        (70, '社区C', '良好', 4, 4.6),
-        (69, '社区C', '临界', 6, 4.3),
-        (71, '社区D', '良好', 2, 4.9),
-        (73, '社区D', '高危', 9, 3.8),
-        (67, '社区E', '良好', 3, 4.7),
-        (74, '社区E', '临界', 7, 4.4)
+    # 插入默认用户
+    users_data = [
+        ('admin', '123456', 'institution'),
+        ('caregiver1', '123456', 'caregiver'),
+        ('gov', '123456', 'regulatory')
     ]
-    
-    cursor.executemany('''
-    INSERT OR IGNORE INTO seniors (age, community_id, health_status, service_count, avg_satisfaction)
-    VALUES (?, ?, ?, ?, ?)
-    ''', seniors_data)
+    cursor.executemany('INSERT OR IGNORE INTO users (username, password, role) VALUES (?, ?, ?)', users_data)
+
+    # 插入初始社区数据
+    communities_data = [
+        ('C001', '社区A', 5000, 800),
+        ('C002', '社区B', 4500, 750),
+        ('C003', '社区C', 6000, 1000),
+        ('C004', '社区D', 4000, 600),
+        ('C005', '社区E', 5500, 900)
+    ]
+    cursor.executemany('INSERT OR IGNORE INTO community (community_id, name, total_population, elderly_population) VALUES (?, ?, ?, ?)', communities_data)
     
     # 插入健康记录数据
     health_records_data = [

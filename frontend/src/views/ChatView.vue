@@ -5,6 +5,14 @@
         <h2>AI聊天</h2>
       </div>
       <div class="header-right">
+        <el-button
+          v-if="isCaregiver"
+          type="danger"
+          @click="showEmergencyDialog"
+          icon="Warning"
+        >
+          触发异常预警
+        </el-button>
         <el-button type="primary" @click="clearChat" icon="Delete">
           清空聊天
         </el-button>
@@ -82,13 +90,44 @@
 </template>
 
 <script setup lang="ts">
+import auth from "@/utils/auth";
 import axios from "@/utils/http";
 import { Loading } from "@element-plus/icons-vue";
-import { ElMessage } from "element-plus";
-import { onMounted, ref } from "vue";
+import { ElMessage, ElMessageBox } from "element-plus";
+import { computed, onMounted, ref } from "vue";
 
 // 响应式数据
 const messages = ref([]);
+const currentUser = computed(() => auth.getCurrentUser());
+const isCaregiver = computed(() => currentUser.value?.role === "caregiver");
+
+// 触发紧急预警
+function showEmergencyDialog() {
+  ElMessageBox.prompt("请输入老人ID和异常情况描述", "紧急预警", {
+    confirmButtonText: "提交预警",
+    cancelButtonText: "取消",
+    inputPlaceholder: "格式：老人ID:异常描述",
+  }).then(async ({ value }) => {
+    if (value) {
+      try {
+        await axios.post("/api/chat/emergency", {
+          content: value,
+          sender: currentUser.value?.username,
+        });
+        ElMessage.success("预警已提交，管理人员将尽快处理");
+
+        // 自动发送一条消息到聊天框
+        messages.value.push({
+          sender: "user",
+          text: `[紧急预警] ${value}`,
+          timestamp: new Date().toLocaleTimeString(),
+        });
+      } catch (e) {
+        ElMessage.error("预警提交失败");
+      }
+    }
+  });
+}
 const inputMessage = ref("");
 const isLoading = ref(false);
 const commonQuestions = ref([]);

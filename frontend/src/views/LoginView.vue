@@ -121,12 +121,12 @@ const formRef = ref();
 const isLogin = ref(true);
 
 // 登录处理
-function handleLogin() {
+async function handleLogin() {
   if (!form.value.username || !form.value.password) {
     ElMessage.warning("请填写用户名和密码");
     return;
   }
-  const ok = auth.login(form.value.username, form.value.password);
+  const ok = await auth.login(form.value.username, form.value.password);
   if (ok) {
     ElMessage.success("登录成功");
     router.push({ path: "/" });
@@ -136,7 +136,7 @@ function handleLogin() {
 }
 
 // 注册处理
-function handleRegister() {
+async function handleRegister() {
   if (!reg.value.username || reg.value.password.length < 6) {
     ElMessage.warning("用户名不能为空，且密码至少6位");
     return;
@@ -145,12 +145,12 @@ function handleRegister() {
     ElMessage.warning("两次密码不一致");
     return;
   }
-  const ok = auth.register(reg.value.username, reg.value.password);
+  const ok = await auth.register(reg.value.username, reg.value.password);
   if (ok) {
     ElMessage.success("注册并登录成功");
     router.push({ path: "/" });
   } else {
-    ElMessage.error("用户名已存在");
+    ElMessage.error("用户名已存在或注册失败");
   }
 }
 
