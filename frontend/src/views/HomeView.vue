@@ -336,7 +336,7 @@ import {
   Warning,
 } from "@element-plus/icons-vue";
 import * as echarts from "echarts";
-import { ElMessage } from "element-plus";
+import { ElMessage, ElMessageBox } from "element-plus";
 import { computed, onMounted, ref } from "vue";
 import { useRouter } from "vue-router";
 
@@ -625,6 +625,27 @@ const loadServiceDetailData = async () => {
     ];
   }
 };
+
+// 触发紧急预警
+function showEmergencyDialog() {
+  ElMessageBox.prompt("请输入老人ID和异常情况描述", "紧急预警", {
+    confirmButtonText: "提交预警",
+    cancelButtonText: "取消",
+    inputPlaceholder: "格式：老人ID:异常描述",
+  }).then(async ({ value }) => {
+    if (value) {
+      try {
+        await axios.post("/api/chat/emergency", {
+          content: value,
+          sender: currentUser.value?.username,
+        });
+        ElMessage.success("预警已提交，管理人员将尽快处理");
+      } catch (e) {
+        ElMessage.error("预警提交失败");
+      }
+    }
+  });
+}
 
 // 加载满意度详情数据
 const loadSatisfactionDetailData = async () => {
