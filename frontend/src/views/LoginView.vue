@@ -217,9 +217,10 @@
 import auth from "@/utils/auth";
 import { ElMessage } from "element-plus";
 import { ref } from "vue";
-import { useRouter } from "vue-router";
+import { useRoute, useRouter } from "vue-router";
 
 const router = useRouter();
+const route = useRoute();
 
 // 登录表单数据
 const form = ref({ username: "", password: "" });
@@ -313,7 +314,9 @@ async function confirmQuickLogin() {
   const ok = await auth.login(form.value.username, form.value.password);
   if (ok) {
     ElMessage.success(`以 ${role.name} 身份登录成功`);
-    router.push({ path: "/" });
+    // 如果有重定向参数，跳转到目标页面，否则跳转到首页
+    const redirect = (route.query.redirect as string) || "/";
+    router.push({ path: redirect });
   } else {
     ElMessage.error("登录失败，请检查账号是否存在");
   }
@@ -328,7 +331,9 @@ async function handleLogin() {
   const ok = await auth.login(form.value.username, form.value.password);
   if (ok) {
     ElMessage.success("登录成功");
-    router.push({ path: "/" });
+    // 如果有重定向参数，跳转到目标页面，否则跳转到首页
+    const redirect = (route.query.redirect as string) || "/";
+    router.push({ path: redirect });
   } else {
     ElMessage.error("用户名或密码错误");
   }
@@ -347,7 +352,9 @@ async function handleRegister() {
   const ok = await auth.register(reg.value.username, reg.value.password);
   if (ok) {
     ElMessage.success("注册并登录成功");
-    router.push({ path: "/" });
+    // 如果有重定向参数，跳转到目标页面，否则跳转到首页
+    const redirect = (route.query.redirect as string) || "/";
+    router.push({ path: redirect });
   } else {
     ElMessage.error("用户名已存在或注册失败");
   }
