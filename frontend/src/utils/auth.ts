@@ -1,20 +1,36 @@
-import api from "./http";
-
 const CURRENT_KEY = "app_current_user";
+const USERS_KEY = "app_users_list";
 
 export type User = { username: string; role: string };
+
+// 初始化一些默认用户以便测试
+function initDefaultUsers() {
+  const users = localStorage.getItem(USERS_KEY);
+  if (!users) {
+    const defaultUsers = [
+      { username: "admin", password: "111111", role: "admin" },
+      { username: "caregiver1", password: "111111", role: "caregiver" },
+      { username: "institution1", password: "111111", role: "institution" },
+      { username: "regulatory1", password: "111111", role: "regulatory" },
+    ];
+    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+  }
+}
+initDefaultUsers();
 
 export async function login(
   username: string,
   password: string,
 ): Promise<boolean> {
   try {
-    const response = await api.post(`/api/auth/login`, {
-      username,
-      password,
-    });
-    if (response.data.user) {
-      localStorage.setItem(CURRENT_KEY, JSON.stringify(response.data.user));
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+    const user = users.find(
+      (u: any) => u.username === username && u.password === password,
+    );
+
+    if (user) {
+      const { password: _, ...userInfo } = user;
+      localStorage.setItem(CURRENT_KEY, JSON.stringify(userInfo));
       return true;
     }
     return false;
@@ -30,16 +46,22 @@ export async function register(
   role: string = "caregiver",
 ): Promise<boolean> {
   try {
-    const response = await api.post(`/api/auth/register`, {
-      username,
-      password,
-      role,
-    });
-    if (response.data.user) {
-      localStorage.setItem(CURRENT_KEY, JSON.stringify(response.data.user));
-      return true;
+    const users = JSON.parse(localStorage.getItem(USERS_KEY) || "[]");
+
+    // 检查用户名是否已存在
+    if (users.some((u: any) => u.username === username)) {
+      return false;
     }
-    return false;
+
+    const newUser = { username, password, role };
+    users.push(newUser);
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
+
+    // 注册后自动登录
+    const { password: _, ...userInfo } = newUser;
+    localStorage.setItem(CURRENT_KEY, JSON.stringify(userInfo));
+
+    return true;
   } catch (error) {
     console.error("Registration failed:", error);
     return false;

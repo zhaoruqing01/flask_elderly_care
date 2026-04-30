@@ -157,7 +157,7 @@ async function handleRegister() {
 // 填充默认账号密码
 function fillDefault() {
   form.value.username = "admin";
-  form.value.password = "123456";
+  form.value.password = "111111";
 }
 
 // 切换登录/注册表单（清空表单数据，避免残留）

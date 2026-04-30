@@ -51,6 +51,43 @@ class DataService:
         db.execute("DELETE FROM community WHERE community_id=?", (community_id,))
 
     # --- 老人管理 ---
+    def get_seniors(self, page=1, page_size=20, community=''):
+        """获取老人数据分页"""
+        base_query = 'SELECT id, elderly_id, name, age, community_id FROM elderly'
+        params = []
+        if community:
+            base_query += " WHERE community_id = ?"
+            params.append(community)
+
+        # 获取总数
+        count_query = 'SELECT COUNT(*) FROM elderly'
+        if community:
+            count_query += " WHERE community_id = ?"
+        total = db.execute(count_query, params)[0][0]
+
+        # 分页
+        offset = (page - 1) * page_size
+        query = base_query + " LIMIT ? OFFSET ?"
+        params.extend([page_size, offset])
+        result = db.execute(query, params)
+
+        items = []
+        for row in result:
+            e_id = row[1]
+            health_res = db.execute('SELECT health_status FROM health_record WHERE elderly_id = ? ORDER BY record_date DESC LIMIT 1', (e_id,))
+            health_status = health_res[0][0] if health_res else '未知'
+            svc_res = db.execute('SELECT COUNT(*) FROM service_record WHERE elderly_id = ?', (e_id,))
+            svc_count = svc_res[0][0] if svc_res else 0
+            sat_res = db.execute('SELECT AVG(satisfaction) FROM service_record WHERE elderly_id = ?', (e_id,))
+            avg_sat = round(float(sat_res[0][0]), 1) if sat_res and sat_res[0][0] else 0
+
+            items.append({
+                'id': row[0], 'elderly_id': row[1], 'name': row[2], 'age': row[3],
+                'community_id': row[4], 'health_status': health_status,
+                'service_count': svc_count, 'avg_satisfaction': avg_sat
+            })
+        return {'items': items, 'total': total}
+
     def add_elderly(self, data):
         """新增老人"""
         query = "INSERT INTO elderly (elderly_id, name, age, gender, community_id) VALUES (?, ?, ?, ?, ?)"
@@ -114,12 +151,65 @@ class DataService:
         db.execute(query, (data['caregiver_id'], data['elderly_id'], data['service_type'], data['service_date'], data['service_time_slot']))
 
     # --- 健康记录管理 ---
+    def get_health_records(self, page=1, page_size=20, start_date='', end_date=''):
+        """获取健康记录分页数据"""
+        query = "SELECT elderly_id, record_date, sbp, dbp, blood_sugar, heart_rate, health_status FROM health_record"
+        params = []
+        conditions = []
+        if start_date:
+            conditions.append("record_date >= ?")
+            params.append(start_date)
+        if end_date:
+            conditions.append("record_date <= ?")
+            params.append(end_date)
+        
+        if conditions:
+            query += " WHERE " + " AND ".join(conditions)
+        
+        count_query = "SELECT COUNT(*) FROM health_record"
+        if conditions:
+            count_query += " WHERE " + " AND ".join(conditions)
+        total = db.execute(count_query, params)[0][0]
+
+        offset = (page - 1) * page_size
+        query += " ORDER BY record_date DESC LIMIT ? OFFSET ?"
+        params.extend([page_size, offset])
+        
+        result = db.execute(query, params)
+        return {'items': [{
+            'elderly_id': r[0], 'record_date': r[1], 'sbp': r[2], 
+            'dbp': r[3], 'blood_sugar': r[4], 'heart_rate': r[5], 'health_status': r[6]
+        } for r in result], 'total': total}
+
     def add_health_record(self, data):
         """新增健康记录"""
         query = "INSERT INTO health_record (elderly_id, record_date, sbp, dbp, blood_sugar, heart_rate, health_status) VALUES (?, ?, ?, ?, ?, ?, ?)"
         db.execute(query, (data['elderly_id'], data['record_date'], data['sbp'], data['dbp'], data['blood_sugar'], data['heart_rate'], data['health_status']))
 
     # --- 服务记录管理 ---
+    def get_service_records(self, page=1, page_size=20, service_type=''):
+        """获取服务记录分页数据"""
+        query = "SELECT elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id FROM service_record"
+        params = []
+        if service_type:
+            query += " WHERE service_type = ?"
+            params.append(service_type)
+        
+        count_query = "SELECT COUNT(*) FROM service_record"
+        if service_type:
+            count_query += " WHERE service_type = ?"
+        total = db.execute(count_query, params)[0][0]
+
+        offset = (page - 1) * page_size
+        query += " ORDER BY service_date DESC LIMIT ? OFFSET ?"
+        params.extend([page_size, offset])
+        
+        result = db.execute(query, params)
+        return {'items': [{
+            'elderly_id': r[0], 'community_id': r[1], 'service_type': r[2], 
+            'service_date': r[3], 'duration': r[4], 'satisfaction': r[5], 'caregiver_id': r[6]
+        } for r in result], 'total': total}
+
     def add_service_record(self, data):
         """新增服务记录"""
         query = "INSERT INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
@@ -143,18 +233,13 @@ class DataService:
         
         result = db.execute(query, params)
         return [{
-            'community_id': r[0],
-            'service_type': r[1],
-            'prediction_date': r[2],
-            'predicted_demand': r[3]
+            'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': r[3]
         } for r in result]
 
     # --- 统计报表功能 ---
     def get_community_stats(self, community_id=None):
         """获取社区全景统计数据"""
         stats = {}
-        
-        # 1. 人口统计
         pop_query = "SELECT community_id, name, total_population, elderly_population FROM community"
         if community_id:
             pop_query += " WHERE community_id = ?"
@@ -162,255 +247,15 @@ class DataService:
         else:
             pop_res = db.execute(pop_query)
         
-        stats['population'] = [{
-            'community_id': r[0], 'name': r[1], 'total': r[2], 'elderly': r[3]
-        } for r in pop_res]
-
-        # 2. 健康统计
-        health_query = """
-            SELECT e.community_id, hr.health_status, COUNT(*) 
-            FROM health_record hr 
-            JOIN elderly e ON hr.elderly_id = e.elderly_id 
-            GROUP BY e.community_id, hr.health_status
-        """
-        health_res = db.execute(health_query)
-        stats['health'] = health_res
-
-        # 3. 服务统计
-        service_query = """
-            SELECT community_id, service_type, COUNT(*), AVG(satisfaction)
-            FROM service_record
-            GROUP BY community_id, service_type
-        """
-        service_res = db.execute(service_query)
-        stats['service'] = service_res
-
+        stats['population'] = [{'community_id': r[0], 'name': r[1], 'total': r[2], 'elderly': r[3]} for r in pop_res]
+        
+        health_query = "SELECT e.community_id, hr.health_status, COUNT(*) FROM health_record hr JOIN elderly e ON hr.elderly_id = e.elderly_id GROUP BY e.community_id, hr.health_status"
+        stats['health'] = db.execute(health_query)
+        
+        service_query = "SELECT community_id, service_type, COUNT(*), AVG(satisfaction) FROM service_record GROUP BY community_id, service_type"
+        stats['service'] = db.execute(service_query)
         return stats
 
-    # --- 审核与状态变更 ---
     def update_schedule_status(self, schedule_id, status):
         """更新排班/订单状态 (审核用)"""
         db.execute("UPDATE schedule SET status = ? WHERE id = ?", (status, schedule_id))
-
-    def update_service_record(self, record_id, data):
-        """修改服务记录 (审核/修正用)"""
-        query = "UPDATE service_record SET duration=?, satisfaction=? WHERE id=?"
-        db.execute(query, (data['duration'], data['satisfaction'], record_id))
-    
-    def get_seniors(self, page=1, page_size=20, community=''):
-        """
-        获取老人数据
-        
-        参数：
-        - page: 页码
-        - page_size: 每页大小
-        - community: 社区筛选
-        
-        返回值：
-        - dict: 老人数据和总数
-        """
-        # 构建查询：从 elderly 表分页查询基本信息，然后再补充健康状态和服务统计
-        base_query = '''
-        SELECT id, elderly_id, name, age, community_id FROM elderly
-        '''
-
-        if community:
-            base_query += f" WHERE community_id = '{community}'"
-
-        # 获取总数
-        count_query = 'SELECT COUNT(*) FROM elderly'
-        if community:
-            count_query += f" WHERE community_id = '{community}'"
-        total = db.execute(count_query)[0][0]
-
-        # 获取分页数据
-        offset = (page - 1) * page_size
-        query = base_query + f" LIMIT {page_size} OFFSET {offset}"
-        result = db.execute(query)
-
-        # 处理结果
-        items = []
-        for row in result:
-            # row: id, elderly_id, name, age, community_id
-            e_id = row[1]
-
-            # 获取老人的最新健康状态
-            health_q = '''
-            SELECT health_status FROM health_record WHERE elderly_id = ? ORDER BY record_date DESC LIMIT 1
-            '''
-            health_res = db.execute(health_q, (e_id,))
-            health_status = health_res[0][0] if health_res else '未知'
-
-            # 获取服务次数
-            svc_q = 'SELECT COUNT(*) FROM service_record WHERE elderly_id = ?'
-            svc_res = db.execute(svc_q, (e_id,))
-            svc_count = svc_res[0][0] if svc_res else 0
-
-            # 获取平均满意度
-            sat_q = 'SELECT AVG(satisfaction) FROM service_record WHERE elderly_id = ?'
-            sat_res = db.execute(sat_q, (e_id,))
-            avg_sat = round(float(sat_res[0][0]), 1) if sat_res and sat_res[0][0] else 0
-
-            items.append({
-                'id': row[0],
-                'elderly_id': row[1],
-                'name': row[2],
-                'age': row[3],
-                'community_id': row[4],
-                'health_status': health_status,
-                'service_count': svc_count,
-                'avg_satisfaction': avg_sat
-            })
-        
-        return {
-            'items': items,
-            'total': total
-        }
-    
-    def get_health_records(self, page=1, page_size=20, start_date='', end_date=''):
-        """
-        获取健康记录
-        
-        参数：
-        - page: 页码
-        - page_size: 每页大小
-        - start_date: 开始日期
-        - end_date: 结束日期
-        
-        返回值：
-        - dict: 健康记录和总数
-        """
-        # 构建查询（健康记录使用 record_date 字段并使用 elderly_id）
-        base_query = 'SELECT id, elderly_id, record_date, age, gender, community_id, health_status FROM health_record'
-
-        where_clauses = []
-        if start_date:
-            where_clauses.append(f"record_date >= '{start_date}'")
-        if end_date:
-            where_clauses.append(f"record_date <= '{end_date}'")
-
-        if where_clauses:
-            base_query += ' WHERE ' + ' AND '.join(where_clauses)
-
-        # 获取总数
-        count_query = base_query.replace('SELECT id, elderly_id, record_date, age, gender, community_id, health_status', 'SELECT COUNT(*)')
-        total = db.execute(count_query)[0][0]
-
-        # 获取分页数据
-        offset = (page - 1) * page_size
-        query = base_query + f" ORDER BY record_date DESC LIMIT {page_size} OFFSET {offset}"
-        result = db.execute(query)
-
-        # 处理结果
-        items = []
-        for row in result:
-            items.append({
-                'id': row[0],
-                'elderly_id': row[1],
-                'record_date': row[2],
-                'age': row[3],
-                'gender': row[4],
-                'community_id': row[5],
-                'health_status': row[6]
-            })
-        
-        return {
-            'items': items,
-            'total': total
-        }
-    
-    def get_service_records(self, page=1, page_size=20, service_type=''):
-        """
-        获取服务记录
-        
-        参数：
-        - page: 页码
-        - page_size: 每页大小
-        - service_type: 服务类型筛选
-        
-        返回值：
-        - dict: 服务记录和总数
-        """
-        # 构建查询（服务记录使用 service_record 表）
-        base_query = 'SELECT id, elderly_id, service_date, service_type, satisfaction, community_id FROM service_record'
-
-        if service_type:
-            base_query += f" WHERE service_type = '{service_type}'"
-
-        # 获取总数
-        count_query = base_query.replace('SELECT id, elderly_id, service_date, service_type, satisfaction, community_id', 'SELECT COUNT(*)')
-        total = db.execute(count_query)[0][0]
-
-        # 获取分页数据
-        offset = (page - 1) * page_size
-        query = base_query + f" ORDER BY service_date DESC LIMIT {page_size} OFFSET {offset}"
-        result = db.execute(query)
-
-        # 处理结果
-        items = []
-        for row in result:
-            items.append({
-                'id': row[0],
-                'elderly_id': row[1],
-                'service_date': row[2],
-                'service_type': row[3],
-                'satisfaction': row[4],
-                'community_id': row[5]
-            })
-        
-        return {
-            'items': items,
-            'total': total
-        }
-    
-    def export_data(self):
-        """
-        导出数据
-        
-        返回值：
-        - dict: 导出数据
-        """
-        # 获取老人数据
-        seniors = db.execute('SELECT id, elderly_id, age, community_id FROM elderly')
-        seniors_data = []
-        for row in seniors:
-            seniors_data.append({
-                'id': row[0],
-                'age': row[1],
-                'community_id': row[2]
-            })
-        
-        # 获取健康记录
-        health_records = db.execute('SELECT id, elderly_id, record_date, age, gender, community_id, health_status FROM health_record')
-        health_data = []
-        for row in health_records:
-            health_data.append({
-                'id': row[0],
-                'senior_id': row[1],
-                'date': row[2],
-                'sbp': row[3],
-                'dbp': row[4],
-                'blood_sugar': row[5],
-                'heart_rate': row[6],
-                'health_status': row[7]
-            })
-        
-        # 获取服务记录
-        service_records = db.execute('SELECT id, elderly_id, service_date, service_type, satisfaction, community_id FROM service_record')
-        service_data = []
-        for row in service_records:
-            service_data.append({
-                'id': row[0],
-                'senior_id': row[1],
-                'service_date': row[2],
-                'service_type': row[3],
-                'duration': row[4],
-                'satisfaction': row[5],
-                'community_id': row[6]
-            })
-        
-        return {
-            'seniors': seniors_data,
-            'health_records': health_data,
-            'service_records': service_data
-        }

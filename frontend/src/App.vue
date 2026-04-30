@@ -26,7 +26,7 @@
           <span>服务分析</span>
         </el-menu-item>
 
-        <el-menu-item v-if="canSeePrediction" index="/prediction">
+        <el-menu-item index="/prediction">
           <el-icon><TrendCharts /></el-icon>
           <span>需求预测</span>
         </el-menu-item>
@@ -36,12 +36,12 @@
           <span>数据管理</span>
         </el-menu-item>
 
-        <el-menu-item v-if="canSeeChat" index="/chat">
+        <el-menu-item index="/chat">
           <el-icon><ChatDotRound /></el-icon>
           <span>AI聊天</span>
         </el-menu-item>
 
-        <el-menu-item v-if="canSeeAdmin" index="/admin">
+        <el-menu-item index="/admin">
           <el-icon><Tools /></el-icon>
           <span>系统管理</span>
         </el-menu-item>

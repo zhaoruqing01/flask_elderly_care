@@ -58,7 +58,7 @@
         </el-row>
       </el-card>
 
-      <!-- 需求预测 (所有角色可见，护工仅看本社区) -->
+      <!-- 需求预测 -->
       <el-card style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
@@ -73,7 +73,7 @@
         </el-table>
       </el-card>
 
-      <!-- 社区信息管理 (仅养老机构可见) -->
+      <!-- 社区信息管理 -->
       <el-card v-if="isInstitution" style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
@@ -83,7 +83,7 @@
                 type="primary"
                 size="small"
                 icon="Plus"
-                @click="showAddCommunityDialog"
+                @click="dialogs.community.visible = true"
               >
                 新增社区
               </el-button>
@@ -97,9 +97,7 @@
           <el-table-column prop="elderly_population" label="老年人口" />
           <el-table-column label="操作" width="150">
             <template #default="scope">
-              <el-button
-                size="small"
-                @click="showEditCommunityDialog(scope.row)"
+              <el-button size="small" @click="handleEditCommunity(scope.row)"
                 >修改</el-button
               >
               <el-button
@@ -113,7 +111,7 @@
         </el-table>
       </el-card>
 
-      <!-- 护工管理 (仅养老机构可见) -->
+      <!-- 护工管理 -->
       <el-card v-if="isInstitution" style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
@@ -123,7 +121,7 @@
                 type="success"
                 size="small"
                 icon="Plus"
-                @click="showAddCaregiverDialog"
+                @click="dialogs.caregiver.visible = true"
               >
                 新增护工
               </el-button>
@@ -138,7 +136,7 @@
         </el-table>
       </el-card>
 
-      <!-- 排班管理 (养老机构可见管理，护工可见自身) -->
+      <!-- 排班管理 -->
       <el-card v-if="isInstitution || isCaregiver" style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
@@ -149,7 +147,7 @@
                 type="warning"
                 size="small"
                 icon="Plus"
-                @click="showAddScheduleDialog"
+                @click="dialogs.schedule.visible = true"
               >
                 新增排班
               </el-button>
@@ -166,7 +164,7 @@
         </el-table>
       </el-card>
 
-      <!-- 数据表格 -->
+      <!-- 老人基本信息 -->
       <el-card style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
@@ -177,7 +175,7 @@
                 type="primary"
                 size="small"
                 icon="Plus"
-                @click="showAddElderlyDialog"
+                @click="dialogs.elderly.visible = true"
                 style="margin-right: 10px"
               >
                 新增老人
@@ -204,7 +202,8 @@
           border
           show-overflow-tooltip
         >
-          <el-table-column prop="id" label="ID" />
+          <el-table-column prop="elderly_id" label="ID" />
+          <el-table-column prop="name" label="姓名" />
           <el-table-column prop="age" label="年龄" />
           <el-table-column prop="community_id" label="社区" />
           <el-table-column prop="health_status" label="健康状态">
@@ -216,6 +215,19 @@
           </el-table-column>
           <el-table-column prop="service_count" label="服务次数" />
           <el-table-column prop="avg_satisfaction" label="平均满意度" />
+          <el-table-column label="操作" width="150" v-if="isInstitution">
+            <template #default="scope">
+              <el-button size="small" @click="handleEditElderly(scope.row)"
+                >修改</el-button
+              >
+              <el-button
+                size="small"
+                type="danger"
+                @click="handleDeleteElderly(scope.row.elderly_id)"
+                >删除</el-button
+              >
+            </template>
+          </el-table-column>
         </el-table>
         <div class="pagination" style="margin-top: 20px">
           <el-pagination
@@ -230,7 +242,7 @@
         </div>
       </el-card>
 
-      <!-- 健康记录表格 -->
+      <!-- 健康记录 -->
       <el-card style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
@@ -241,7 +253,7 @@
                 type="danger"
                 size="small"
                 icon="Plus"
-                @click="showAddHealthRecordDialog"
+                @click="dialogs.healthRecord.visible = true"
                 style="margin-right: 10px"
               >
                 上报健康记录
@@ -270,9 +282,8 @@
           border
           show-overflow-tooltip
         >
-          <!-- <el-table-column prop="id" label="记录ID" /> -->
-          <el-table-column prop="id" label="老人ID" />
-          <el-table-column prop="created_at" label="记录日期" />
+          <el-table-column prop="elderly_id" label="老人ID" />
+          <el-table-column prop="record_date" label="记录日期" />
           <el-table-column prop="sbp" label="收缩压" />
           <el-table-column prop="dbp" label="舒张压" />
           <el-table-column prop="blood_sugar" label="血糖" />
@@ -298,7 +309,7 @@
         </div>
       </el-card>
 
-      <!-- 服务记录表格 -->
+      <!-- 服务记录 -->
       <el-card>
         <template #header>
           <div class="card-header">
@@ -309,7 +320,7 @@
                 type="info"
                 size="small"
                 icon="Plus"
-                @click="showAddServiceRecordDialog"
+                @click="dialogs.serviceRecord.visible = true"
                 style="margin-right: 10px"
               >
                 提交服务记录
@@ -343,16 +354,11 @@
           border
           show-overflow-tooltip
         >
-          <!-- <el-table-column prop="id" label="记录ID" /> -->
-          <el-table-column prop="id" label="老人ID" />
+          <el-table-column prop="elderly_id" label="老人ID" />
           <el-table-column prop="service_date" label="服务日期" />
           <el-table-column prop="service_type" label="服务类型" />
           <el-table-column prop="duration" label="服务时长(分钟)" />
-          <el-table-column prop="satisfaction" label="满意度">
-            <template #default="scope">
-              <el-rate v-model="scope.row.satisfaction" disabled />
-            </template>
-          </el-table-column>
+          <el-table-column prop="satisfaction" label="满意度" />
           <el-table-column prop="community_id" label="社区" />
         </el-table>
         <div class="pagination" style="margin-top: 20px">
@@ -362,12 +368,224 @@
             :page-sizes="[10, 20, 50, 100]"
             layout="total, sizes, prev, pager, next, jumper"
             :total="totalServiceRecords"
-            @size-change="handleServiceSizeChange"
-            @current-change="handleServiceCurrentChange"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
           />
         </div>
       </el-card>
     </el-main>
+
+    <!-- 弹窗部分 -->
+    <!-- 社区弹窗 -->
+    <el-dialog
+      v-model="dialogs.community.visible"
+      :title="dialogs.community.isEdit ? '编辑社区' : '新增社区'"
+      width="500px"
+    >
+      <el-form :model="dialogs.community.form" label-width="100px">
+        <el-form-item label="社区ID">
+          <el-input
+            v-model="dialogs.community.form.community_id"
+            :disabled="dialogs.community.isEdit"
+          />
+        </el-form-item>
+        <el-form-item label="社区名称">
+          <el-input v-model="dialogs.community.form.name" />
+        </el-form-item>
+        <el-form-item label="总人口">
+          <el-input-number v-model="dialogs.community.form.total_population" />
+        </el-form-item>
+        <el-form-item label="老年人口">
+          <el-input-number
+            v-model="dialogs.community.form.elderly_population"
+          />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogs.community.visible = false">取消</el-button>
+        <el-button type="primary" @click="submitCommunity">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 老人弹窗 -->
+    <el-dialog v-model="dialogs.elderly.visible" :title="dialogs.elderly.isEdit ? '编辑老人信息' : '新增老人'" width="500px">
+      <el-form :model="dialogs.elderly.form" label-width="100px">
+        <el-form-item label="老人ID">
+          <el-input v-model="dialogs.elderly.form.elderly_id" :disabled="dialogs.elderly.isEdit" />
+        </el-form-item>
+        <el-form-item label="姓名">
+          <el-input v-model="dialogs.elderly.form.name" />
+        </el-form-item>
+        <el-form-item label="年龄">
+          <el-input-number v-model="dialogs.elderly.form.age" />
+        </el-form-item>
+        <el-form-item label="性别">
+          <el-select v-model="dialogs.elderly.form.gender">
+            <el-option label="男" value="男" />
+            <el-option label="女" value="女" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="所属社区">
+          <el-select v-model="dialogs.elderly.form.community_id">
+            <el-option
+              v-for="c in communitiesFullData"
+              :key="c.community_id"
+              :label="c.name"
+              :value="c.community_id"
+            />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogs.elderly.visible = false">取消</el-button>
+        <el-button type="primary" @click="submitElderly">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 护工弹窗 -->
+    <el-dialog
+      v-model="dialogs.caregiver.visible"
+      title="新增护工"
+      width="500px"
+    >
+      <el-form :model="dialogs.caregiver.form" label-width="100px">
+        <el-form-item label="护工ID">
+          <el-input v-model="dialogs.caregiver.form.caregiver_id" />
+        </el-form-item>
+        <el-form-item label="姓名">
+          <el-input v-model="dialogs.caregiver.form.name" />
+        </el-form-item>
+        <el-form-item label="所属社区">
+          <el-select v-model="dialogs.caregiver.form.community_id">
+            <el-option
+              v-for="c in communitiesFullData"
+              :key="c.community_id"
+              :label="c.name"
+              :value="c.community_id"
+            />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="资质">
+          <el-input v-model="dialogs.caregiver.form.qualification" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogs.caregiver.visible = false">取消</el-button>
+        <el-button type="primary" @click="submitCaregiver">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 健康记录弹窗 -->
+    <el-dialog
+      v-model="dialogs.healthRecord.visible"
+      title="上报健康记录"
+      width="500px"
+    >
+      <el-form :model="dialogs.healthRecord.form" label-width="100px">
+        <el-form-item label="老人ID">
+          <el-input v-model="dialogs.healthRecord.form.elderly_id" />
+        </el-form-item>
+        <el-form-item label="记录日期">
+          <el-date-picker
+            v-model="dialogs.healthRecord.form.record_date"
+            type="date"
+            value-format="YYYY-MM-DD"
+          />
+        </el-form-item>
+        <el-form-item label="收缩压">
+          <el-input-number v-model="dialogs.healthRecord.form.sbp" />
+        </el-form-item>
+        <el-form-item label="舒张压">
+          <el-input-number v-model="dialogs.healthRecord.form.dbp" />
+        </el-form-item>
+        <el-form-item label="血糖">
+          <el-input-number
+            v-model="dialogs.healthRecord.form.blood_sugar"
+            :precision="1"
+            :step="0.1"
+          />
+        </el-form-item>
+        <el-form-item label="心率">
+          <el-input-number v-model="dialogs.healthRecord.form.heart_rate" />
+        </el-form-item>
+        <el-form-item label="健康状态">
+          <el-select v-model="dialogs.healthRecord.form.health_status">
+            <el-option label="良好" value="良好" />
+            <el-option label="临界" value="临界" />
+            <el-option label="高危" value="高危" />
+          </el-select>
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogs.healthRecord.visible = false"
+          >取消</el-button
+        >
+        <el-button type="primary" @click="submitHealthRecord">提交</el-button>
+      </template>
+      </el-dialog>
+    <!-- 排班弹窗 -->
+    <el-dialog v-model="dialogs.schedule.visible" title="新增排班" width="500px">
+      <el-form :model="dialogs.schedule.form" label-width="100px">
+        <el-form-item label="护工ID">
+          <el-select v-model="dialogs.schedule.form.caregiver_id">
+            <el-option v-for="c in caregiversData" :key="c.caregiver_id" :label="c.name" :value="c.caregiver_id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="老人ID">
+          <el-input v-model="dialogs.schedule.form.elderly_id" />
+        </el-form-item>
+        <el-form-item label="服务类型">
+          <el-select v-model="dialogs.schedule.form.service_type">
+            <el-option v-for="s in services" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="服务日期">
+          <el-date-picker v-model="dialogs.schedule.form.service_date" type="date" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="时间段">
+          <el-input v-model="dialogs.schedule.form.service_time_slot" placeholder="如: 09:00-10:00" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogs.schedule.visible = false">取消</el-button>
+        <el-button type="primary" @click="submitSchedule">提交</el-button>
+      </template>
+    </el-dialog>
+
+    <!-- 服务记录弹窗 -->
+    <el-dialog v-model="dialogs.serviceRecord.visible" title="提交服务记录" width="500px">
+      <el-form :model="dialogs.serviceRecord.form" label-width="100px">
+        <el-form-item label="老人ID">
+          <el-input v-model="dialogs.serviceRecord.form.elderly_id" />
+        </el-form-item>
+        <el-form-item label="所属社区">
+          <el-select v-model="dialogs.serviceRecord.form.community_id">
+            <el-option v-for="c in communitiesFullData" :key="c.community_id" :label="c.name" :value="c.community_id" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="服务类型">
+          <el-select v-model="dialogs.serviceRecord.form.service_type">
+            <el-option v-for="s in services" :key="s" :label="s" :value="s" />
+          </el-select>
+        </el-form-item>
+        <el-form-item label="服务日期">
+          <el-date-picker v-model="dialogs.serviceRecord.form.service_date" type="date" value-format="YYYY-MM-DD" />
+        </el-form-item>
+        <el-form-item label="时长(分钟)">
+          <el-input-number v-model="dialogs.serviceRecord.form.duration" :min="1" />
+        </el-form-item>
+        <el-form-item label="满意度">
+          <el-rate v-model="dialogs.serviceRecord.form.satisfaction" :max="5" />
+        </el-form-item>
+        <el-form-item label="护工ID">
+          <el-input v-model="dialogs.serviceRecord.form.caregiver_id" />
+        </el-form-item>
+      </el-form>
+      <template #footer>
+        <el-button @click="dialogs.serviceRecord.visible = false">取消</el-button>
+        <el-button type="primary" @click="submitServiceRecord">提交</el-button>
+      </template>
+    </el-dialog>
   </el-container>
 </template>
 
@@ -375,193 +593,14 @@
 import auth from "@/utils/auth";
 import axios from "@/utils/http";
 import { ElMessage, ElMessageBox } from "element-plus";
-import { computed, onMounted, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 
 const currentUser = computed(() => auth.getCurrentUser());
 const isInstitution = computed(() => currentUser.value?.role === "institution");
 const isCaregiver = computed(() => currentUser.value?.role === "caregiver");
 const isRegulatory = computed(() => currentUser.value?.role === "regulatory");
-const isReadOnly = computed(() => isRegulatory.value);
 
-// 护工与排班数据
-const caregiversData = ref([]);
-const schedulesData = ref([]);
-const predictionsData = ref([]);
-const communitiesFullData = ref([]);
-
-// --- 弹窗逻辑 ---
-const showAddCommunityDialog = () => {
-  ElMessageBox.prompt(
-    "请输入社区信息 (格式: ID,名称,总人口,老年人口)",
-    "新增社区",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    },
-  ).then(async ({ value }) => {
-    const [id, name, total, elderly] = value.split(",");
-    await axios.post("/api/data/communities", {
-      community_id: id,
-      name,
-      total_population: parseInt(total),
-      elderly_population: parseInt(elderly),
-    });
-    refreshData();
-  });
-};
-
-const showEditCommunityDialog = (row: any) => {
-  ElMessageBox.prompt(
-    "请修改社区信息 (格式: 名称,总人口,老年人口)",
-    "修改社区",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-      inputValue: `${row.name},${row.total_population},${row.elderly_population}`,
-    },
-  ).then(async ({ value }) => {
-    const [name, total, elderly] = value.split(",");
-    await axios.put(`/api/data/communities/${row.community_id}`, {
-      name,
-      total_population: parseInt(total),
-      elderly_population: parseInt(elderly),
-    });
-    refreshData();
-  });
-};
-
-const handleDeleteCommunity = (id: string) => {
-  ElMessageBox.confirm("确定删除该社区吗？", "提示", { type: "warning" }).then(
-    async () => {
-      try {
-        await axios.delete(`/api/data/communities/${id}`);
-        refreshData();
-      } catch (e: any) {
-        ElMessage.error(e.response?.data?.error || "删除失败");
-      }
-    },
-  );
-};
-
-const showAddElderlyDialog = () => {
-  ElMessageBox.prompt(
-    "请输入老人信息 (格式: ID,姓名,年龄,性别,社区ID)",
-    "新增老人",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    },
-  ).then(async ({ value }) => {
-    const [id, name, age, gender, commId] = value.split(",");
-    await axios.post("/api/data/seniors", {
-      elderly_id: id,
-      name,
-      age: parseInt(age),
-      gender,
-      community_id: commId,
-    });
-    refreshData();
-  });
-};
-
-const showAddCaregiverDialog = () => {
-  ElMessageBox.prompt(
-    "请输入护工信息 (格式: ID,姓名,社区ID,资质)",
-    "新增护工",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    },
-  ).then(async ({ value }) => {
-    const [id, name, commId, qual] = value.split(",");
-    await axios.post("/api/data/caregivers", {
-      caregiver_id: id,
-      name,
-      community_id: commId,
-      qualification: qual,
-    });
-    refreshData();
-  });
-};
-
-const showAddScheduleDialog = () => {
-  ElMessageBox.prompt(
-    "请输入排班信息 (格式: 护工ID,老人ID,类型,日期,时段)",
-    "新增排班",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    },
-  ).then(async ({ value }) => {
-    const [cgId, eId, type, date, slot] = value.split(",");
-    await axios.post("/api/data/schedules", {
-      caregiver_id: cgId,
-      elderly_id: eId,
-      service_type: type,
-      service_date: date,
-      service_time_slot: slot,
-    });
-    refreshData();
-  });
-};
-
-const showAddHealthRecordDialog = () => {
-  ElMessageBox.prompt(
-    "请输入健康记录 (格式: 老人ID,日期,高压,低压,血糖,心率,状态)",
-    "上报健康记录",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    },
-  ).then(async ({ value }) => {
-    const [eId, date, sbp, dbp, sugar, hr, status] = value.split(",");
-    await axios.post("/api/data/health-records", {
-      elderly_id: eId,
-      record_date: date,
-      sbp: parseInt(sbp),
-      dbp: parseInt(dbp),
-      blood_sugar: parseFloat(sugar),
-      heart_rate: parseInt(hr),
-      health_status: status,
-    });
-    refreshData();
-  });
-};
-
-const showAddServiceRecordDialog = () => {
-  ElMessageBox.prompt(
-    "请输入服务记录 (格式: 老人ID,社区ID,类型,日期,时长,满意度,护工ID)",
-    "提交服务记录",
-    {
-      confirmButtonText: "确定",
-      cancelButtonText: "取消",
-    },
-  ).then(async ({ value }) => {
-    const [eId, commId, type, date, dur, sat, cgId] = value.split(",");
-    await axios.post("/api/data/service-records", {
-      elderly_id: eId,
-      community_id: commId,
-      service_type: type,
-      service_date: date,
-      duration: parseInt(dur),
-      satisfaction: parseInt(sat),
-      caregiver_id: cgId,
-    });
-    refreshData();
-  });
-};
-
-const showReportDialog = async () => {
-  const res = await axios.get("/api/data/reports/community");
-  ElMessageBox.alert(JSON.stringify(res.data, null, 2), "社区全景统计报表", {
-    customClass: "report-msgbox",
-  });
-};
-
-const communities = ref([]);
-const services = ref([]);
-
-// 响应式统计数据
+// 响应式数据
 const stats = ref({
   senior_count: 0,
   health_records: 0,
@@ -570,131 +609,101 @@ const stats = ref({
   caregivers: 0,
 });
 
-// 表格数据
 const seniorsData = ref([]);
 const totalSeniors = ref(0);
-const healthRecords = ref([]);
-const totalHealthRecords = ref(0);
-const serviceRecords = ref([]);
-const totalServiceRecords = ref(0);
-
-// 分页数据
 const currentPage = ref(1);
 const pageSize = ref(20);
+const tableFilter = ref("all");
+const communities = ref([]);
 
+const healthRecords = ref([]);
+const totalHealthRecords = ref(0);
 const healthCurrentPage = ref(1);
 const healthPageSize = ref(20);
+const dateRange = ref([]);
 
+const serviceRecords = ref([]);
+const totalServiceRecords = ref(0);
 const serviceCurrentPage = ref(1);
 const servicePageSize = ref(20);
-
-// 筛选条件
-const tableFilter = ref("all");
-const dateRange = ref(null);
 const serviceTypeFilter = ref("all");
+const services = ref(["助餐", "助医", "保洁", "陪护", "康复"]);
 
-// 获取健康状态类型
-const getHealthStatusType = (status) => {
-  switch (status) {
-    case "良好":
-      return "success";
-    case "临界":
-      return "warning";
-    case "高危":
-      return "danger";
-    default:
-      return "info";
-  }
-};
+const caregiversData = ref([]);
+const schedulesData = ref([]);
+const predictionsData = ref([]);
+const communitiesFullData = ref([]);
 
-// 加载数据统计
-const loadStats = async () => {
-  try {
-    const response = await axios.get("/api/data/stats");
-    stats.value = response.data;
-  } catch (error) {
-    console.error("加载数据统计失败:", error);
-  }
-};
+// 弹窗状态管理
+const dialogs = reactive({
+  community: {
+    visible: false,
+    isEdit: false,
+    form: {
+      community_id: "",
+      name: "",
+      total_population: 0,
+      elderly_population: 0,
+    },
+  },
+  elderly: {
+    visible: false,
+    isEdit: false,
+    form: { elderly_id: "", name: "", age: 70, gender: "男", community_id: "" },
+  },
+  caregiver: {
+    visible: false,
+    form: { caregiver_id: "", name: "", community_id: "", qualification: "" },
+  },
+  schedule: {
+    visible: false,
+    form: {
+      caregiver_id: "",
+      elderly_id: "",
+      service_type: "助餐",
+      service_date: "",
+      service_time_slot: "",
+    },
+  },
+  healthRecord: {
+    visible: false,
+    form: {
+      elderly_id: "",
+      record_date: "",
+      sbp: 120,
+      dbp: 80,
+      blood_sugar: 5.0,
+      heart_rate: 75,
+      health_status: "良好",
+    },
+  },
+  serviceRecord: {
+    visible: false,
+    form: {
+      elderly_id: "",
+      community_id: "",
+      service_type: "助餐",
+      service_date: "",
+      duration: 60,
+      satisfaction: 5,
+      caregiver_id: "",
+    },
+  },
+});
 
-// 加载老人数据
-const loadSeniorsData = async () => {
-  try {
-    const response = await axios.get("/api/data/seniors", {
-      params: {
-        page: currentPage.value,
-        page_size: pageSize.value,
-        community: tableFilter.value === "all" ? "" : tableFilter.value,
-      },
-    });
-    seniorsData.value = response.data.items;
-    totalSeniors.value = response.data.total;
-  } catch (error) {
-    console.error("加载老人数据失败:", error);
-  }
-};
-
-// 加载健康记录
-const loadHealthRecords = async () => {
-  try {
-    const params = {
-      page: healthCurrentPage.value,
-      page_size: healthPageSize.value,
-    };
-    if (dateRange.value) {
-      params.start_date = dateRange.value[0];
-      params.end_date = dateRange.value[1];
-    }
-    const response = await axios.get("/api/data/health-records", { params });
-    healthRecords.value = response.data.items;
-    totalHealthRecords.value = response.data.total;
-  } catch (error) {
-    console.error("加载健康记录失败:", error);
-  }
-};
-
-// 加载服务记录
-const loadServiceRecords = async () => {
-  try {
-    const params = {
-      page: serviceCurrentPage.value,
-      page_size: servicePageSize.value,
-    };
-    if (serviceTypeFilter.value !== "all") {
-      params.service_type = serviceTypeFilter.value;
-    }
-    const response = await axios.get("/api/data/service-records", { params });
-    serviceRecords.value = response.data.items;
-    totalServiceRecords.value = response.data.total;
-  } catch (error) {
-    console.error("加载服务记录失败:", error);
-  }
-};
-
-// 加载社区列表
-const loadCommunities = async () => {
-  try {
-    const response = await axios.get("/api/data/communities");
-    communities.value = response.data;
-  } catch (error) {
-    console.error("加载社区列表失败:", error);
-  }
-};
-
-// 加载服务类型列表
-const loadServices = async () => {
-  try {
-    const response = await axios.get("/api/data/services");
-    services.value = response.data;
-  } catch (error) {
-    console.error("加载服务类型列表失败:", error);
-  }
+// 获取状态样式
+const getHealthStatusType = (status: string) => {
+  if (status === "良好" || status === "healthy") return "success";
+  if (status === "临界" || status === "hypertension") return "warning";
+  if (status === "高危" || status === "diabetes") return "danger";
+  return "info";
 };
 
 // 刷新数据
 const refreshData = async () => {
   try {
-    await loadStats();
+    const statsRes = await axios.get("/api/data/stats");
+    stats.value = statsRes.data;
 
     const commRes = await axios.get("/api/data/communities");
     communitiesFullData.value = commRes.data;
@@ -715,92 +724,200 @@ const refreshData = async () => {
       schedulesData.value = schRes.data;
     }
 
-    await loadSeniorsData();
-    await loadHealthRecords();
-    await loadServiceRecords();
-    await loadServices();
-
-    ElMessage.success("数据已刷新");
+    loadSeniorsData();
+    loadHealthRecords();
+    loadServiceRecords();
   } catch (error) {
-    console.error("刷新数据失败:", error);
-    ElMessage.error("数据加载失败");
+    console.error("加载数据失败:", error);
   }
 };
 
-// 导出数据
-const exportData = async () => {
+const loadSeniorsData = async () => {
+  const res = await axios.get("/api/data/seniors", {
+    params: {
+      page: currentPage.value,
+      page_size: pageSize.value,
+      community: tableFilter.value === "all" ? "" : tableFilter.value,
+    },
+  });
+  seniorsData.value = res.data.items;
+  totalSeniors.value = res.data.total;
+};
+
+const loadHealthRecords = async () => {
+  const res = await axios.get("/api/data/health-records", {
+    params: {
+      page: healthCurrentPage.value,
+      page_size: healthPageSize.value,
+      start_date: dateRange.value?.[0] || "",
+      end_date: dateRange.value?.[1] || "",
+    },
+  });
+  healthRecords.value = res.data.items;
+  totalHealthRecords.value = res.data.total;
+};
+
+const loadServiceRecords = async () => {
+  const res = await axios.get("/api/data/service-records", {
+    params: {
+      page: serviceCurrentPage.value,
+      page_size: servicePageSize.value,
+      service_type:
+        serviceTypeFilter.value === "all" ? "" : serviceTypeFilter.value,
+    },
+  });
+  serviceRecords.value = res.data.items;
+  totalServiceRecords.value = res.data.total;
+};
+
+// 提交逻辑
+const submitCommunity = async () => {
   try {
-    const response = await axios.get("/api/data/export", {
-      responseType: "blob",
-    });
-    const url = window.URL.createObjectURL(new Blob([response.data]));
-    const link = document.createElement("a");
-    link.href = url;
-    link.setAttribute(
-      "download",
-      `data_export_${new Date().toISOString().slice(0, 10)}.xlsx`,
-    );
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    ElMessage.success("数据导出成功");
-  } catch (error) {
-    console.error("导出数据失败:", error);
-    ElMessage.error("导出数据失败");
+    if (dialogs.community.isEdit) {
+      await axios.put(
+        `/api/data/communities/${dialogs.community.form.community_id}`,
+        dialogs.community.form,
+      );
+    } else {
+      await axios.post("/api/data/communities", dialogs.community.form);
+    }
+    ElMessage.success("保存成功");
+    dialogs.community.visible = false;
+    refreshData();
+  } catch (e: any) {
+    ElMessage.error(e.error || "保存失败");
   }
 };
 
-// 筛选健康记录
+const handleEditCommunity = (row: any) => {
+  dialogs.community.isEdit = true;
+  dialogs.community.form = { ...row };
+  dialogs.community.visible = true;
+};
+
+const handleDeleteCommunity = (id: string) => {
+  ElMessageBox.confirm("确定删除该社区吗？", "提示", { type: "warning" }).then(
+    async () => {
+      try {
+        await axios.delete(`/api/data/communities/${id}`);
+        ElMessage.success("删除成功");
+        refreshData();
+      } catch (e: any) {
+        ElMessage.error(e.error || "删除失败");
+      }
+    },
+  );
+};
+
+const submitElderly = async () => {
+  try {
+    if (dialogs.elderly.isEdit) {
+      await axios.put(`/api/data/seniors/${dialogs.elderly.form.elderly_id}`, dialogs.elderly.form);
+    } else {
+      await axios.post("/api/data/seniors", dialogs.elderly.form);
+    }
+    ElMessage.success("保存成功");
+    dialogs.elderly.visible = false;
+    refreshData();
+  } catch (e: any) {
+    ElMessage.error(e.error || "保存失败");
+  }
+};
+
+const handleEditElderly = (row: any) => {
+  dialogs.elderly.isEdit = true;
+  dialogs.elderly.form = { ...row };
+  dialogs.elderly.visible = true;
+};
+
+const handleDeleteElderly = (id: string) => {
+  ElMessageBox.confirm('确定删除该老人信息吗？', '提示', { type: 'warning' }).then(async () => {
+    try {
+      await axios.delete(`/api/data/seniors/${id}`);
+      ElMessage.success("删除成功");
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.error || "删除失败");
+    }
+  });
+};
+
+const submitCaregiver = async () => {
+  try {
+    await axios.post("/api/data/caregivers", dialogs.caregiver.form);
+    ElMessage.success("添加成功");
+    dialogs.caregiver.visible = false;
+    refreshData();
+  } catch (e: any) {
+    ElMessage.error(e.error || "添加失败");
+  }
+};
+
+const submitSchedule = async () => {
+  try {
+    await axios.post("/api/data/schedules", dialogs.schedule.form);
+    ElMessage.success("排班成功");
+    dialogs.schedule.visible = false;
+    refreshData();
+  } catch (e: any) {
+    ElMessage.error(e.error || "排班失败");
+  }
+};
+
+const submitHealthRecord = async () => {
+  try {
+    await axios.post("/api/data/health-records", dialogs.healthRecord.form);
+    ElMessage.success("上报成功");
+    dialogs.healthRecord.visible = false;
+    refreshData();
+  } catch (e: any) {
+    ElMessage.error(e.error || "上报失败");
+  }
+};
+
+const submitServiceRecord = async () => {
+  try {
+    await axios.post("/api/data/service-records", dialogs.serviceRecord.form);
+    ElMessage.success("提交成功");
+    dialogs.serviceRecord.visible = false;
+    refreshData();
+  } catch (e: any) {
+    ElMessage.error(e.error || "提交失败");
+  }
+};
+
+const showReportDialog = async () => {
+  const res = await axios.get("/api/data/reports/community");
+  ElMessageBox.alert(
+    `<pre>${JSON.stringify(res.data, null, 2)}</pre>`,
+    "社区全景统计报表",
+    {
+      dangerouslyUseHTMLString: true,
+      confirmButtonText: "确定",
+    },
+  );
+};
+
+// 分页与筛选
+const handleSizeChange = (val: number) => {
+  pageSize.value = val;
+  loadSeniorsData();
+};
+const handleCurrentChange = (val: number) => {
+  currentPage.value = val;
+  loadSeniorsData();
+};
 const filterHealthRecords = () => {
   healthCurrentPage.value = 1;
   loadHealthRecords();
 };
-
-// 筛选服务记录
 const filterServiceRecords = () => {
   serviceCurrentPage.value = 1;
   loadServiceRecords();
 };
 
-// 分页处理
-const handleSizeChange = (size) => {
-  pageSize.value = size;
-  loadSeniorsData();
-};
-
-const handleCurrentChange = (current) => {
-  currentPage.value = current;
-  loadSeniorsData();
-};
-
-const handleHealthSizeChange = (size) => {
-  healthPageSize.value = size;
-  loadHealthRecords();
-};
-
-const handleHealthCurrentChange = (current) => {
-  healthCurrentPage.value = current;
-  loadHealthRecords();
-};
-
-const handleServiceSizeChange = (size) => {
-  servicePageSize.value = size;
-  loadServiceRecords();
-};
-
-const handleServiceCurrentChange = (current) => {
-  serviceCurrentPage.value = current;
-  loadServiceRecords();
-};
-
-// 页面加载时初始化
 onMounted(() => {
-  loadStats();
-  loadSeniorsData();
-  loadHealthRecords();
-  loadServiceRecords();
-  loadCommunities();
-  loadServices();
+  refreshData();
 });
 </script>
 
