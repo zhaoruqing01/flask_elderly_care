@@ -5,8 +5,8 @@
         <h2>养老服务数据分析系统</h2>
       </div>
       <div class="header-right">
-        <span class="greeting-text">{{ greetingMessage }}</span>
-        <el-divider direction="vertical" />
+        <!-- <span class="greeting-text">{{ greetingMessage }}</span> -->
+        <!-- <el-divider direction="vertical" /> -->
         <el-button
           v-if="isInstitution"
           size="small"
@@ -1239,7 +1239,7 @@ onMounted(() => {
 }
 
 .greeting-text {
-  color: #fff;
+  color: rgb(0, 102, 204);
   font-size: 0.95rem;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
@@ -1250,7 +1250,7 @@ onMounted(() => {
   align-items: center;
   gap: 4px;
   font-size: 0.9rem;
-  color: #fff;
+  color: #333;
   font-weight: 500;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }

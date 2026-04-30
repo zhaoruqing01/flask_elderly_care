@@ -2,49 +2,69 @@
   <el-container class="service-container">
     <el-header height="60px" class="header">
       <div class="header-left">
-        <h2>服务分析</h2>
+        <h2>服务数据分析</h2>
+      </div>
+      <div class="header-right">
+        <el-tag type="info" size="small" effect="plain"> 数据看板 </el-tag>
       </div>
     </el-header>
-    <el-main>
-      <!-- 服务使用频次 -->
-      <el-card style="margin-bottom: 20px">
-        <template #header>
-          <div class="card-header">
-            <span>服务使用频次</span>
-          </div>
-        </template>
-        <div id="serviceFrequencyChart" class="chart-container"></div>
-      </el-card>
+    <el-main class="main-content">
+      <!-- 页面简介 -->
+      <div class="intro-section">
+        <h3 class="section-title">养老服务使用分析</h3>
+        <p class="section-desc">
+          全面展示各类养老服务的使用情况、社区分布、满意度评价及变化趋势
+        </p>
+      </div>
 
-      <!-- 按社区分析服务使用频次 -->
-      <el-card style="margin-bottom: 20px">
-        <template #header>
-          <div class="card-header">
-            <span>按社区分析服务使用频次</span>
-          </div>
-        </template>
-        <div id="serviceByCommunityChart" class="chart-container"></div>
-      </el-card>
+      <!-- 主要内容区域 - 左右布局 -->
+      <div class="content-wrapper">
+        <!-- 左侧列 -->
+        <div class="left-column">
+          <!-- 服务使用频次 -->
+          <el-card class="data-card" shadow="hover">
+            <template #header>
+              <div class="card-title">
+                <span class="title-text">服务使用频次</span>
+              </div>
+            </template>
+            <div id="serviceFrequencyChart" class="chart-box"></div>
+          </el-card>
 
-      <!-- 服务满意度 -->
-      <el-card style="margin-bottom: 20px">
-        <template #header>
-          <div class="card-header">
-            <span>服务满意度</span>
-          </div>
-        </template>
-        <div id="serviceSatisfactionChart" class="chart-container"></div>
-      </el-card>
+          <!-- 服务满意度 -->
+          <el-card class="data-card" shadow="hover">
+            <template #header>
+              <div class="card-title">
+                <span class="title-text">服务满意度评分</span>
+              </div>
+            </template>
+            <div id="serviceSatisfactionChart" class="chart-box"></div>
+          </el-card>
+        </div>
 
-      <!-- 服务使用趋势 -->
-      <el-card>
-        <template #header>
-          <div class="card-header">
-            <span>服务使用趋势</span>
-          </div>
-        </template>
-        <div id="serviceTrendChart" class="chart-container"></div>
-      </el-card>
+        <!-- 右侧列 -->
+        <div class="right-column">
+          <!-- 按社区分析服务使用频次 -->
+          <el-card class="data-card" shadow="hover">
+            <template #header>
+              <div class="card-title">
+                <span class="title-text">社区服务分布</span>
+              </div>
+            </template>
+            <div id="serviceByCommunityChart" class="chart-box-large"></div>
+          </el-card>
+
+          <!-- 服务使用趋势 -->
+          <el-card class="data-card" shadow="hover">
+            <template #header>
+              <div class="card-title">
+                <span class="title-text">服务使用趋势</span>
+              </div>
+            </template>
+            <div id="serviceTrendChart" class="chart-box-large"></div>
+          </el-card>
+        </div>
+      </div>
     </el-main>
   </el-container>
 </template>
@@ -281,30 +301,129 @@ onMounted(() => {
 <style scoped>
 .service-container {
   height: 100vh;
+  background-color: #f5f7fa;
 }
 
 .header {
   display: flex;
   align-items: center;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 0 20px;
+  justify-content: space-between;
+  background-color: #ffffff;
+  padding: 0 24px;
+  border-bottom: 1px solid #ebeef5;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
 }
 
 .header-left h2 {
   margin: 0;
-  font-size: 1.2rem;
-  color: #0066cc;
+  font-size: 1.3rem;
+  color: #303133;
+  font-weight: 600;
 }
 
-.chart-container {
-  height: 400px;
+.header-right {
+  display: flex;
+  align-items: center;
+}
+
+.main-content {
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+/* 简介区域 */
+.intro-section {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+}
+
+.section-title {
+  margin: 0 0 6px 0;
+  color: #303133;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.section-desc {
+  margin: 0;
+  color: #909399;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* 内容包装器 - 左右布局 */
+.content-wrapper {
+  display: grid;
+  grid-template-columns: 1fr 1.5fr;
+  gap: 16px;
+}
+
+.left-column,
+.right-column {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* 数据卡片 */
+.data-card {
+  background-color: #ffffff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+}
+
+.data-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #dcdfe6;
+}
+
+.card-title {
+  display: flex;
+  align-items: center;
+}
+
+.title-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #303133;
+}
+
+.chart-box {
+  height: 260px;
   width: 100%;
 }
 
-.card-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+.chart-box-large {
+  height: 300px;
+  width: 100%;
+}
+
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .content-wrapper {
+    grid-template-columns: 1fr;
+  }
+
+  .left-column,
+  .right-column {
+    gap: 16px;
+  }
+}
+
+@media (min-width: 1201px) and (max-width: 1600px) {
+  .content-wrapper {
+    grid-template-columns: 1fr 1.3fr;
+  }
+}
+
+@media (min-width: 1601px) {
+  .content-wrapper {
+    grid-template-columns: 1fr 1.5fr;
+  }
 }
 </style>

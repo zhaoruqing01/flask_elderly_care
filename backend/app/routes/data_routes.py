@@ -5,6 +5,7 @@
 
 from flask import Blueprint, jsonify, request, current_app
 from app.services.data_service import DataService
+from app.utils.database import db
 from functools import wraps
 import traceback
 
@@ -259,6 +260,22 @@ def delete_service_record_api(record_id):
         return jsonify({'message': '删除成功'})
     except Exception as e:
         return jsonify({'error': str(e)}), 400
+
+# --- 服务类型列表 ---
+@bp.route('/services', methods=['GET'])
+def get_services_api():
+    """获取服务类型列表 - 所有角色可访问"""
+    try:
+        # 从 service_record 表中获取所有不重复的服务类型
+        result = db.execute("SELECT DISTINCT service_type FROM service_record ORDER BY service_type")
+        services = [row[0] for row in result]
+        # 如果数据库中没有数据,返回默认的服务类型列表
+        if not services:
+            services = ['助餐', '助医', '保洁', '陪护', '康复']
+        return jsonify(services)
+    except Exception as e:
+        # 出错时返回默认服务类型
+        return jsonify(['助餐', '助医', '保洁', '陪护', '康复'])
 
 # --- 预测与报表 ---
 @bp.route('/predictions', methods=['GET'])

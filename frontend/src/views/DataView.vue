@@ -1141,6 +1141,7 @@ const refreshData = async () => {
     loadSeniorsData();
     loadHealthRecords();
     loadServiceRecords();
+    ElMessage.success("刷新数据成功");
   } catch (error) {
     console.error("加载数据失败:", error);
   }

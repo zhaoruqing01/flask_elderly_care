@@ -172,55 +172,57 @@
           </div>
         </div>
       </el-card>
-
-      <!-- 资源配置建议 -->
-      <el-card style="margin-bottom: 20px">
+      <!-- 异常检测 -->
+      <el-card>
         <template #header>
           <div class="card-header">
-            <span>资源配置建议</span>
+            <span>异常检测</span>
             <div class="card-header-actions">
-              <el-select
-                v-model="recommendationFilter"
-                placeholder="按优先级筛选"
-                style="width: 120px"
+              <el-button
+                size="small"
+                @click="detectAnomalies"
+                icon="WarningFilled"
               >
-                <el-option label="全部" value="all" />
-                <el-option label="高" value="高" />
-                <el-option label="中" value="中" />
-                <el-option label="低" value="低" />
-              </el-select>
+                检测异常
+              </el-button>
+              <el-button
+                size="small"
+                type="primary"
+                @click.stop="openAnomalyDetail"
+              >
+                查看详情
+              </el-button>
             </div>
           </div>
         </template>
-        <el-table
-          :data="filteredRecommendations"
-          style="width: 100%"
-          show-overflow-tooltip
-        >
-          <el-table-column prop="community" label="社区" />
-          <el-table-column prop="service" label="服务类型" />
-          <el-table-column prop="predicted_demand" label="预测需求" />
-          <el-table-column prop="daily_avg" label="日均需求" />
-          <el-table-column prop="staff_needed" label="所需人员" />
-          <el-table-column prop="priority" label="优先级">
-            <template #default="scope">
-              <el-tag :type="getPriorityType(scope.row.priority)">
-                {{ scope.row.priority }}
-              </el-tag>
+        <div v-if="anomalies.length > 0">
+          <el-alert
+            v-for="(anomaly, index) in anomalies"
+            :key="index"
+            :title="`异常: ${anomaly.description}`"
+            :type="
+              anomaly.severity === '高'
+                ? 'error'
+                : anomaly.severity === '中'
+                  ? 'warning'
+                  : 'info'
+            "
+            show-icon
+            :closable="false"
+            style="margin-bottom: 10px"
+          >
+            <template #default>
+              <div>
+                <p>{{ anomaly.details }}</p>
+                <p><strong>建议:</strong> {{ anomaly.suggestion }}</p>
+              </div>
             </template>
-          </el-table-column>
-          <el-table-column prop="suggestion" label="建议" />
-          <el-table-column prop="confidence" label="置信度">
-            <template #default="scope">
-              <el-progress
-                :percentage="scope.row.confidence || 0"
-                :format="() => `${scope.row.confidence || 0}%`"
-              />
-            </template>
-          </el-table-column>
-        </el-table>
+          </el-alert>
+        </div>
+        <div v-else class="no-anomalies">
+          <el-empty description="未检测到异常" />
+        </div>
       </el-card>
-
       <!-- 模型评估与对比 -->
       <el-card style="margin-bottom: 20px">
         <template #header>
@@ -282,56 +284,52 @@
         </div>
       </el-card>
 
-      <!-- 异常检测 -->
-      <el-card>
+      <!-- 资源配置建议 -->
+      <el-card style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
-            <span>异常检测</span>
+            <span>资源配置建议</span>
             <div class="card-header-actions">
-              <el-button
-                size="small"
-                @click="detectAnomalies"
-                icon="WarningFilled"
+              <el-select
+                v-model="recommendationFilter"
+                placeholder="按优先级筛选"
+                style="width: 120px"
               >
-                检测异常
-              </el-button>
-              <el-button
-                size="small"
-                type="primary"
-                @click.stop="openAnomalyDetail"
-              >
-                查看详情
-              </el-button>
+                <el-option label="全部" value="all" />
+                <el-option label="高" value="高" />
+                <el-option label="中" value="中" />
+                <el-option label="低" value="低" />
+              </el-select>
             </div>
           </div>
         </template>
-        <div v-if="anomalies.length > 0">
-          <el-alert
-            v-for="(anomaly, index) in anomalies"
-            :key="index"
-            :title="`异常: ${anomaly.description}`"
-            :type="
-              anomaly.severity === '高'
-                ? 'error'
-                : anomaly.severity === '中'
-                  ? 'warning'
-                  : 'info'
-            "
-            show-icon
-            :closable="false"
-            style="margin-bottom: 10px"
-          >
-            <template #default>
-              <div>
-                <p>{{ anomaly.details }}</p>
-                <p><strong>建议:</strong> {{ anomaly.suggestion }}</p>
-              </div>
+        <el-table
+          :data="filteredRecommendations"
+          style="width: 100%"
+          show-overflow-tooltip
+        >
+          <el-table-column prop="community" label="社区" />
+          <el-table-column prop="service" label="服务类型" />
+          <el-table-column prop="predicted_demand" label="预测需求" />
+          <el-table-column prop="daily_avg" label="日均需求" />
+          <el-table-column prop="staff_needed" label="所需人员" />
+          <el-table-column prop="priority" label="优先级">
+            <template #default="scope">
+              <el-tag :type="getPriorityType(scope.row.priority)">
+                {{ scope.row.priority }}
+              </el-tag>
             </template>
-          </el-alert>
-        </div>
-        <div v-else class="no-anomalies">
-          <el-empty description="未检测到异常" />
-        </div>
+          </el-table-column>
+          <el-table-column prop="suggestion" label="建议" />
+          <el-table-column prop="confidence" label="置信度">
+            <template #default="scope">
+              <el-progress
+                :percentage="scope.row.confidence || 0"
+                :format="() => `${scope.row.confidence || 0}%`"
+              />
+            </template>
+          </el-table-column>
+        </el-table>
       </el-card>
     </el-main>
 

@@ -2,7 +2,7 @@
   <el-container class="health-container">
     <el-header height="60px" class="header">
       <div class="header-left">
-        <h2>健康分析</h2>
+        <h2>健康分析中心</h2>
       </div>
       <div class="header-right">
         <el-button size="small" type="primary" @click="openHealthOverview">
@@ -18,59 +18,93 @@
         </el-button>
       </div>
     </el-header>
-    <el-main>
-      <!-- 健康状态分布 -->
+    <el-main class="main-content">
+      <!-- 页面简介 -->
+      <div class="intro-section">
+        <h3 class="section-title">健康数据分析</h3>
+        <p class="section-desc">
+          本页面提供全面的老年人健康状况分析，包括健康状态分布、年龄段分析和趋势变化等关键指标。
+        </p>
+      </div>
+
+      <!-- 图表网格布局 -->
+      <div class="charts-grid">
+        <!-- 健康状态分布 -->
+        <el-card
+          class="chart-card"
+          shadow="hover"
+          @click="openHealthDistributionDetail"
+        >
+          <template #header>
+            <div class="card-header">
+              <div class="header-title">
+                <span class="title-text">健康状态分布</span>
+                <span class="title-desc"
+                  >查看当前老人健康状态的总体分布情况</span
+                >
+              </div>
+              <el-button
+                size="small"
+                type="primary"
+                link
+                @click.stop="openHealthDistributionDetail"
+              >
+                查看详情 →
+              </el-button>
+            </div>
+          </template>
+          <div id="healthDistributionChart" class="chart-container"></div>
+        </el-card>
+
+        <!-- 按年龄段分析健康状态 -->
+        <el-card
+          class="chart-card"
+          shadow="hover"
+          @click="openHealthByAgeDetail"
+        >
+          <template #header>
+            <div class="card-header">
+              <div class="header-title">
+                <span class="title-text">按年龄段分析</span>
+                <span class="title-desc">不同年龄段老人的健康状况对比</span>
+              </div>
+              <el-button
+                size="small"
+                type="primary"
+                link
+                @click.stop="openHealthByAgeDetail"
+              >
+                查看详情 →
+              </el-button>
+            </div>
+          </template>
+          <div id="healthByAgeChart" class="chart-container"></div>
+        </el-card>
+      </div>
+
+      <!-- 健康状态趋势 - 大卡片 -->
       <el-card
-        style="margin-bottom: 20px"
-        @click="openHealthDistributionDetail"
+        class="chart-card chart-card-large"
+        shadow="hover"
+        @click="openHealthTrendDetail"
       >
         <template #header>
           <div class="card-header">
-            <span>健康状态分布</span>
+            <div class="header-title">
+              <span class="title-text">健康状态趋势</span>
+              <span class="title-desc">观察老人健康状态随时间的变化</span>
+            </div>
             <el-button
               size="small"
               type="primary"
-              @click.stop="openHealthDistributionDetail"
-            >
-              查看详情
-            </el-button>
-          </div>
-        </template>
-        <div id="healthDistributionChart" class="chart-container"></div>
-      </el-card>
-
-      <!-- 按年龄段分析健康状态 -->
-      <el-card style="margin-bottom: 20px" @click="openHealthByAgeDetail">
-        <template #header>
-          <div class="card-header">
-            <span>按年龄段分析健康状态</span>
-            <el-button
-              size="small"
-              type="primary"
-              @click.stop="openHealthByAgeDetail"
-            >
-              查看详情
-            </el-button>
-          </div>
-        </template>
-        <div id="healthByAgeChart" class="chart-container"></div>
-      </el-card>
-
-      <!-- 健康状态趋势 -->
-      <el-card @click="openHealthTrendDetail">
-        <template #header>
-          <div class="card-header">
-            <span>健康状态趋势</span>
-            <el-button
-              size="small"
-              type="primary"
+              link
               @click.stop="openHealthTrendDetail"
             >
-              查看详情
+              查看详情 →
             </el-button>
           </div>
         </template>
-        <div id="healthTrendChart" class="chart-container"></div>
+        <div id="healthTrendChart" class="chart-container-large"></div>
       </el-card>
     </el-main>
 
@@ -254,12 +288,55 @@ const dialogVisible = ref({
   recommendations: false,
 });
 
+// 详情数据类型定义
+interface HealthOverviewItem {
+  indicator: string;
+  value: number;
+  unit: string;
+  change: string;
+  description: string;
+}
+
+interface HealthDistributionDetailItem {
+  status: string;
+  count: number;
+  percentage: string;
+  male_count: number;
+  female_count: number;
+  avg_age: number;
+}
+
+interface HealthByAgeDetailItem {
+  age_group: string;
+  good_count: number;
+  critical_count: number;
+  high_risk_count: number;
+  total: number;
+  high_risk_rate: string;
+}
+
+interface HealthTrendDetailItem {
+  date: string;
+  good_count: number;
+  critical_count: number;
+  high_risk_count: number;
+  high_risk_rate: string;
+  change: string;
+}
+
+interface HealthRecommendationItem {
+  category: string;
+  title: string;
+  content: string;
+  target: string;
+}
+
 // 详情数据
-const healthOverviewData = ref([]);
-const healthDistributionDetailData = ref([]);
-const healthByAgeDetailData = ref([]);
-const healthTrendDetailData = ref([]);
-const healthRecommendationsData = ref([]);
+const healthOverviewData = ref<HealthOverviewItem[]>([]);
+const healthDistributionDetailData = ref<HealthDistributionDetailItem[]>([]);
+const healthByAgeDetailData = ref<HealthByAgeDetailItem[]>([]);
+const healthTrendDetailData = ref<HealthTrendDetailItem[]>([]);
+const healthRecommendationsData = ref<HealthRecommendationItem[]>([]);
 
 // 图表实例
 let healthDistributionChart: echarts.ECharts | null = null;
@@ -774,37 +851,117 @@ onMounted(() => {
 <style scoped>
 .health-container {
   height: 100vh;
+  background-color: #f5f7fa;
 }
 
 .header {
   display: flex;
   align-items: center;
-  background-color: #fff;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  padding: 0 20px;
+  background-color: #ffffff;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+  padding: 0 24px;
+  border-bottom: 1px solid #ebeef5;
 }
 
 .header-left h2 {
   margin: 0;
   font-size: 1.2rem;
-  color: #0066cc;
+  color: rgb(0, 102, 204);
+  font-weight: 600;
 }
 
-.chart-container {
-  height: 400px;
-  width: 100%;
+.main-content {
+  padding: 20px 24px;
+  overflow-y: auto;
+}
+
+.intro-section {
+  margin-bottom: 20px;
+  padding: 16px 20px;
+  background-color: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #ebeef5;
+}
+
+.section-title {
+  margin: 0 0 6px 0;
+  color: #303133;
+  font-size: 1.05rem;
+  font-weight: 600;
+}
+
+.section-desc {
+  margin: 0;
+  color: #909399;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.charts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 16px;
+}
+
+.chart-card {
+  background-color: #ffffff;
+  border: 1px solid #ebeef5;
+  border-radius: 8px;
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.chart-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+  border-color: #dcdfe6;
 }
 
 .card-header {
   display: flex;
   justify-content: space-between;
-  align-items: center;
+  align-items: flex-start;
+  padding: 0;
+}
+
+.header-title {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.title-text {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #303133;
+  margin-bottom: 4px;
+}
+
+.title-desc {
+  font-size: 0.82rem;
+  color: #a8abb2;
+  line-height: 1.4;
+}
+
+.chart-container {
+  height: 280px;
+  width: 100%;
+}
+
+.chart-container-large {
+  height: 350px;
+  width: 100%;
+}
+
+.chart-card-large {
+  margin-top: 16px;
 }
 
 .header-right {
-  margin-left: 20px;
+  margin-left: auto;
   display: flex;
   align-items: center;
+  gap: 10px;
 }
 
 .dialog-content {
@@ -813,20 +970,31 @@ onMounted(() => {
 
 .dialog-content h3 {
   margin: 0 0 20px 0;
-  color: #333;
+  color: #303133;
   font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .chart-container-small {
   width: 100%;
 }
 
-.el-card {
-  cursor: pointer;
-  transition: all 0.3s ease;
+/* 响应式调整 */
+@media (max-width: 1200px) {
+  .charts-grid {
+    grid-template-columns: 1fr;
+  }
 }
 
-.el-card:hover {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+@media (min-width: 1201px) and (max-width: 1600px) {
+  .charts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1601px) {
+  .charts-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
 }
 </style>

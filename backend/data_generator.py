@@ -281,6 +281,67 @@ def generate_service_logs(senior_id, community_id, age):
     return logs
 
 
+def generate_prediction_data():
+    """
+    生成服务需求预测数据
+    
+    功能：
+    1. 为每个社区和每种服务类型生成未来30天的预测数据
+    2. 基于历史数据进行简单的趋势预测
+    """
+    predictions = []
+    end_date = datetime.now()
+    
+    # 为每个社区和每种服务类型生成预测
+    for community in COMMUNITIES:
+        for service_type in SERVICE_TYPES:
+            # 获取该社区该服务的历史平均需求
+            base_demand = SERVICE_BASE_DEMAND[service_type]['base']
+            variance = SERVICE_BASE_DEMAND[service_type]['variance']
+            community_pref = COMMUNITY_SERVICE_PREFERENCE[community][service_type]
+            
+            # 计算基础预测值
+            avg_demand = base_demand * community_pref
+            
+            # 生成未来30天的预测数据
+            for i in range(1, 31):
+                predict_date = (end_date + timedelta(days=i)).strftime('%Y-%m-%d')
+                
+                # 添加一些随机波动和趋势
+                trend_factor = 1.0 + (i * 0.005)  # 轻微上升趋势
+                random_factor = random.uniform(0.9, 1.1)  # 随机波动±10%
+                
+                predicted_demand = round(avg_demand * trend_factor * random_factor, 2)
+                
+                predictions.append((community, service_type, predict_date, predicted_demand))
+    
+    return predictions
+
+
+def insert_prediction_data(predictions):
+    """
+    将预测数据插入数据库
+    
+    参数：
+    - predictions: 预测数据列表，每个元素是 (community_id, service_type, predict_date, predicted_demand)
+    """
+    conn = sqlite3.connect(DB_PATH)
+    cursor = conn.cursor()
+    
+    # 清空现有预测数据
+    cursor.execute('DELETE FROM prediction_result')
+    
+    # 批量插入预测数据
+    cursor.executemany(
+        'INSERT INTO prediction_result (community_id, service_type, prediction_date, predicted_demand) VALUES (?, ?, ?, ?)',
+        predictions
+    )
+    
+    conn.commit()
+    conn.close()
+    print(f"已插入 {len(predictions)} 条预测数据")
+
+
 def generate_and_insert():
     """
     生成所有模拟数据并插入数据库
@@ -290,6 +351,7 @@ def generate_and_insert():
     2. 清空现有数据
     3. 生成老人数据并插入
     4. 为每位老人生成健康记录和服务记录并插入
+    5. 生成预测数据并插入
     
     返回值：
     - True：生成成功
@@ -341,9 +403,14 @@ def generate_and_insert():
             # 批量插入服务记录
             cursor.executemany('INSERT INTO service_record (elderly_id, service_date, service_type, duration, satisfaction, community_id) VALUES (?, ?, ?, ?, ?, ?)', service_logs)
     
-    # 提交事务并关闭连接
+    # 提交事务
     conn.commit()
     conn.close()
+    
+    # 生成并插入预测数据
+    predictions = generate_prediction_data()
+    insert_prediction_data(predictions)
+    
     return True
 
 
