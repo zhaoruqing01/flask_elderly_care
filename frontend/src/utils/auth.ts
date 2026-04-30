@@ -3,6 +3,14 @@ const USERS_KEY = "app_users_list";
 
 export type User = { username: string; role: string };
 
+// 添加自定义事件用于通知用户状态变化
+const USER_CHANGED_EVENT = "user-state-changed";
+
+// 触发用户状态变更事件
+function notifyUserChanged() {
+  window.dispatchEvent(new Event(USER_CHANGED_EVENT));
+}
+
 // 初始化一些默认用户以便测试
 function initDefaultUsers() {
   const existingUsers = localStorage.getItem(USERS_KEY);
@@ -23,7 +31,7 @@ function initDefaultUsers() {
     { username: "gov", password: "123456", role: "regulatory" },
   ];
 
-  // 检查每个默认用户是否存在，不存在则添加
+  // 检查每个默认用户是否存在,不存在则添加
   let hasChanges = false;
   defaultUsers.forEach((defaultUser) => {
     const exists = users.some((u) => u.username === defaultUser.username);
@@ -33,7 +41,7 @@ function initDefaultUsers() {
     }
   });
 
-  // 如果有新增用户，保存到 localStorage
+  // 如果有新增用户,保存到 localStorage
   if (hasChanges || !existingUsers) {
     localStorage.setItem(USERS_KEY, JSON.stringify(users));
   }
@@ -53,6 +61,8 @@ export async function login(
     if (user) {
       const { password: _, ...userInfo } = user;
       localStorage.setItem(CURRENT_KEY, JSON.stringify(userInfo));
+      // 触发状态更新事件
+      notifyUserChanged();
       return true;
     }
     return false;
@@ -82,6 +92,8 @@ export async function register(
     // 注册后自动登录
     const { password: _, ...userInfo } = newUser;
     localStorage.setItem(CURRENT_KEY, JSON.stringify(userInfo));
+    // 触发状态更新事件
+    notifyUserChanged();
 
     return true;
   } catch (error) {
@@ -92,6 +104,8 @@ export async function register(
 
 export function logout() {
   localStorage.removeItem(CURRENT_KEY);
+  // 触发状态更新事件
+  notifyUserChanged();
 }
 
 export function getCurrentUser(): User | null {
@@ -111,6 +125,9 @@ export function hasRole(role: string): boolean {
   return user?.role === role;
 }
 
+// 导出事件名称供组件监听
+export const USER_STATE_CHANGED = USER_CHANGED_EVENT;
+
 export default {
   login,
   register,
@@ -118,4 +135,5 @@ export default {
   getCurrentUser,
   isAuthenticated,
   hasRole,
+  USER_STATE_CHANGED,
 };

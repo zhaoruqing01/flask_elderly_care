@@ -127,7 +127,8 @@
       width="900px"
       :close-on-click-modal="false"
       class="role-dialog"
-      top="5vh"
+      align-center
+      :lock-scroll="true"
     >
       <div class="role-selection">
         <el-row :gutter="16">
@@ -366,15 +367,17 @@ function toggleForm() {
 </script>
 
 <style scoped>
-/* 页面全屏居中 */
+/* 页面全屏居中，杜绝外部大滚动条 */
 .login-page {
   height: 100vh;
+  width: 100vw;
   display: flex;
   align-items: center;
   justify-content: center;
   background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
   margin: 0;
   padding: 0;
+  overflow: hidden;
 }
 
 /* 卡片容器宽度控制 */
@@ -434,37 +437,39 @@ function toggleForm() {
   margin-top: 0;
 }
 
-/* 角色选择弹窗样式 */
-.role-dialog :deep(.el-dialog) {
-  height: 85vh;
+/* ======== 弹窗内部滚动核心样式 ======== */
+/* 将选择器直接指向 .role-dialog (弹窗本身) */
+:deep(.role-dialog) {
+  max-height: 85vh;
   display: flex;
   flex-direction: column;
-  margin-top: 5vh !important;
 }
 
-.role-dialog :deep(.el-dialog__header) {
+/* 固定头部 */
+:deep(.role-dialog .el-dialog__header) {
   padding: 16px 20px;
   border-bottom: 1px solid #ebeef5;
+  margin-right: 0; /* 清除默认右边距 */
   flex-shrink: 0;
 }
 
-.role-dialog :deep(.el-dialog__body) {
+/* 主体开启滚动 */
+:deep(.role-dialog .el-dialog__body) {
   padding: 16px 20px;
   flex: 1;
   overflow-y: auto;
+  overflow-x: hidden;
   min-height: 0;
 }
 
-.role-dialog :deep(.el-dialog__footer) {
+/* 固定尾部 */
+:deep(.role-dialog .el-dialog__footer) {
   padding: 12px 20px;
   border-top: 1px solid #ebeef5;
   flex-shrink: 0;
 }
 
-.role-selection {
-  /* 移除滚动，让弹窗body处理滚动 */
-}
-
+/* 角色卡片等内部样式保持不变 */
 .role-card {
   margin-bottom: 12px;
   cursor: pointer;

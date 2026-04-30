@@ -123,6 +123,24 @@ def add_caregiver_api():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+@bp.route('/caregivers/<string:caregiver_id>', methods=['PUT'])
+@roles_required('institution')
+def update_caregiver_api(caregiver_id):
+    try:
+        data_service.update_caregiver(caregiver_id, request.json)
+        return jsonify({'message': '更新成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/caregivers/<string:caregiver_id>', methods=['DELETE'])
+@roles_required('institution')
+def delete_caregiver_api(caregiver_id):
+    try:
+        data_service.delete_caregiver(caregiver_id)
+        return jsonify({'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
 # --- 排班管理 ---
 @bp.route('/schedules', methods=['GET'])
 def get_schedules_api():
@@ -139,58 +157,108 @@ def add_schedule_api():
     except Exception as e:
         return jsonify({'error': str(e)}), 400
 
+@bp.route('/schedules/<int:schedule_id>', methods=['PUT'])
+@roles_required('institution')
+def update_schedule_api(schedule_id):
+    try:
+        data_service.update_schedule(schedule_id, request.json)
+        return jsonify({'message': '更新成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/schedules/<int:schedule_id>', methods=['DELETE'])
+@roles_required('institution')
+def delete_schedule_api(schedule_id):
+    try:
+        data_service.delete_schedule(schedule_id)
+        return jsonify({'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
 # --- 健康记录 ---
-@bp.route('/health-records', methods=['GET', 'POST'])
-def health_records_api():
-    """健康记录接口 - GET查询, POST新增"""
-    if request.method == 'POST':
-        # POST 需要护工权限
-        role = request.headers.get('X-User-Role') or request.args.get('role')
-        if not role:
-            return jsonify({'error': '未授权'}), 401
-        if role != 'caregiver':
-            return jsonify({'error': '权限不足'}), 403
-        try:
-            data_service.add_health_record(request.json)
-            return jsonify({'message': '上报成功'})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    else:
-        # GET 查询所有角色都可以访问
-        try:
-            page = int(request.args.get('page', 1))
-            page_size = int(request.args.get('page_size', 20))
-            start_date = request.args.get('start_date', '')
-            end_date = request.args.get('end_date', '')
-            return jsonify(data_service.get_health_records(page, page_size, start_date, end_date))
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+@bp.route('/health-records', methods=['GET'])
+def get_health_records_api():
+    """获取健康记录列表"""
+    try:
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 20))
+        start_date = request.args.get('start_date', '')
+        end_date = request.args.get('end_date', '')
+        return jsonify(data_service.get_health_records(page, page_size, start_date, end_date))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/health-records', methods=['POST'])
+@roles_required('caregiver')
+def add_health_record_api():
+    """新增健康记录"""
+    try:
+        data_service.add_health_record(request.json)
+        return jsonify({'message': '上报成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/health-records/<int:record_id>', methods=['PUT'])
+@roles_required('caregiver')
+def update_health_record_api(record_id):
+    """更新健康记录"""
+    try:
+        data_service.update_health_record(record_id, request.json)
+        return jsonify({'message': '更新成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/health-records/<int:record_id>', methods=['DELETE'])
+@roles_required('caregiver')
+def delete_health_record_api(record_id):
+    """删除健康记录"""
+    try:
+        data_service.delete_health_record(record_id)
+        return jsonify({'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 # --- 服务记录 ---
-@bp.route('/service-records', methods=['GET', 'POST'])
-def service_records_api():
-    """服务记录接口 - GET查询, POST新增"""
-    if request.method == 'POST':
-        # POST 需要护工权限
-        role = request.headers.get('X-User-Role') or request.args.get('role')
-        if not role:
-            return jsonify({'error': '未授权'}), 401
-        if role != 'caregiver':
-            return jsonify({'error': '权限不足'}), 403
-        try:
-            data_service.add_service_record(request.json)
-            return jsonify({'message': '提交成功'})
-        except Exception as e:
-            return jsonify({'error': str(e)}), 400
-    else:
-        # GET 查询所有角色都可以访问
-        try:
-            page = int(request.args.get('page', 1))
-            page_size = int(request.args.get('page_size', 20))
-            service_type = request.args.get('service_type', '')
-            return jsonify(data_service.get_service_records(page, page_size, service_type))
-        except Exception as e:
-            return jsonify({'error': str(e)}), 500
+@bp.route('/service-records', methods=['GET'])
+def get_service_records_api():
+    """获取服务记录列表"""
+    try:
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 20))
+        service_type = request.args.get('service_type', '')
+        return jsonify(data_service.get_service_records(page, page_size, service_type))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
+
+@bp.route('/service-records', methods=['POST'])
+@roles_required('caregiver')
+def add_service_record_api():
+    """新增服务记录"""
+    try:
+        data_service.add_service_record(request.json)
+        return jsonify({'message': '提交成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/service-records/<int:record_id>', methods=['PUT'])
+@roles_required('caregiver')
+def update_service_record_api(record_id):
+    """更新服务记录"""
+    try:
+        data_service.update_service_record(record_id, request.json)
+        return jsonify({'message': '更新成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
+
+@bp.route('/service-records/<int:record_id>', methods=['DELETE'])
+@roles_required('caregiver')
+def delete_service_record_api(record_id):
+    """删除服务记录"""
+    try:
+        data_service.delete_service_record(record_id)
+        return jsonify({'message': '删除成功'})
+    except Exception as e:
+        return jsonify({'error': str(e)}), 400
 
 # --- 预测与报表 ---
 @bp.route('/predictions', methods=['GET'])

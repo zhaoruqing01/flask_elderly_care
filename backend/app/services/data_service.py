@@ -139,6 +139,18 @@ class DataService:
         query = "INSERT INTO caregiver (caregiver_id, name, community_id, qualification) VALUES (?, ?, ?, ?)"
         db.execute(query, (data['caregiver_id'], data['name'], data['community_id'], data['qualification']))
 
+    def update_caregiver(self, caregiver_id, data):
+        """更新护工信息"""
+        query = "UPDATE caregiver SET name=?, community_id=?, qualification=? WHERE caregiver_id=?"
+        db.execute(query, (data['name'], data['community_id'], data['qualification'], caregiver_id))
+
+    def delete_caregiver(self, caregiver_id):
+        """删除护工 (仅限无排班记录的护工)"""
+        check = db.execute("SELECT COUNT(*) FROM schedule WHERE caregiver_id=?", (caregiver_id,))
+        if check[0][0] > 0:
+            raise Exception("该护工已有排班记录，无法删除")
+        db.execute("DELETE FROM caregiver WHERE caregiver_id=?", (caregiver_id,))
+
     # --- 排班管理 ---
     def get_schedules(self, caregiver_id=None, elderly_id=None):
         """获取排班列表"""
@@ -166,6 +178,15 @@ class DataService:
         """新增排班"""
         query = "INSERT INTO schedule (caregiver_id, elderly_id, service_type, service_date, service_time_slot) VALUES (?, ?, ?, ?, ?)"
         db.execute(query, (data['caregiver_id'], data['elderly_id'], data['service_type'], data['service_date'], data['service_time_slot']))
+
+    def update_schedule(self, schedule_id, data):
+        """更新排班信息"""
+        query = "UPDATE schedule SET caregiver_id=?, elderly_id=?, service_type=?, service_date=?, service_time_slot=? WHERE id=?"
+        db.execute(query, (data['caregiver_id'], data['elderly_id'], data['service_type'], data['service_date'], data['service_time_slot'], schedule_id))
+
+    def delete_schedule(self, schedule_id):
+        """删除排班"""
+        db.execute("DELETE FROM schedule WHERE id=?", (schedule_id,))
 
     # --- 健康记录管理 ---
     def get_health_records(self, page=1, page_size=20, start_date='', end_date=''):
@@ -202,6 +223,15 @@ class DataService:
         """新增健康记录"""
         query = "INSERT INTO health_record (elderly_id, record_date, sbp, dbp, blood_sugar, heart_rate, health_status) VALUES (?, ?, ?, ?, ?, ?, ?)"
         db.execute(query, (data['elderly_id'], data['record_date'], data['sbp'], data['dbp'], data['blood_sugar'], data['heart_rate'], data['health_status']))
+
+    def update_health_record(self, record_id, data):
+        """更新健康记录"""
+        query = "UPDATE health_record SET elderly_id=?, record_date=?, sbp=?, dbp=?, blood_sugar=?, heart_rate=?, health_status=? WHERE id=?"
+        db.execute(query, (data['elderly_id'], data['record_date'], data['sbp'], data['dbp'], data['blood_sugar'], data['heart_rate'], data['health_status'], record_id))
+
+    def delete_health_record(self, record_id):
+        """删除健康记录"""
+        db.execute("DELETE FROM health_record WHERE id=?", (record_id,))
 
     # --- 服务记录管理 ---
     def get_service_records(self, page=1, page_size=20, service_type=''):
@@ -261,6 +291,21 @@ class DataService:
             # 如果没有 caregiver_id 字段,忽略该字段
             query = "INSERT INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction) VALUES (?, ?, ?, ?, ?, ?)"
             db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction']))
+
+    def update_service_record(self, record_id, data):
+        """更新服务记录"""
+        # 兼容有无 caregiver_id 字段的情况
+        try:
+            query = "UPDATE service_record SET elderly_id=?, community_id=?, service_type=?, service_date=?, duration=?, satisfaction=?, caregiver_id=? WHERE id=?"
+            db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction'], data.get('caregiver_id', ''), record_id))
+        except Exception:
+            # 如果没有 caregiver_id 字段,忽略该字段
+            query = "UPDATE service_record SET elderly_id=?, community_id=?, service_type=?, service_date=?, duration=?, satisfaction=? WHERE id=?"
+            db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction'], record_id))
+
+    def delete_service_record(self, record_id):
+        """删除服务记录"""
+        db.execute("DELETE FROM service_record WHERE id=?", (record_id,))
 
     # --- 预测结果管理 ---
     def get_predictions(self, community_id=None, service_type=None):

@@ -3,7 +3,6 @@
     <el-aside v-if="!isLogin" width="240px" class="sidebar">
       <div class="sidebar-header">
         <h3>养老服务数据分析系统</h3>
-        <p v-if="currentUser">{{ currentUser.username }} ({{ roleName }})</p>
       </div>
       <el-menu
         :default-active="activeMenu"
@@ -46,10 +45,10 @@
           <span>系统管理</span>
         </el-menu-item>
 
-        <el-menu-item @click="handleLogout" style="margin-top: 20px">
+        <!-- <el-menu-item @click="handleLogout" style="margin-top: 20px">
           <el-icon><SwitchButton /></el-icon>
           <span>退出登录</span>
-        </el-menu-item>
+        </el-menu-item> -->
       </el-menu>
     </el-aside>
 
@@ -67,24 +66,37 @@
 </template>
 
 <script setup lang="ts">
-import auth from "@/utils/auth";
+import auth, { USER_STATE_CHANGED } from "@/utils/auth";
 import {
   ChatDotRound,
   DataAnalysis,
   Document,
   HomeFilled,
   Setting,
-  SwitchButton,
   Tools,
   TrendCharts,
 } from "@element-plus/icons-vue";
-import { computed, watch } from "vue";
+import { computed, onMounted, onUnmounted, ref, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
 const router = useRouter();
 
-const currentUser = computed(() => auth.getCurrentUser());
+// 使用ref使currentUser响应式
+const currentUser = ref(auth.getCurrentUser());
+
+// 监听用户状态变更事件
+const handleUserStateChanged = () => {
+  currentUser.value = auth.getCurrentUser();
+};
+
+onMounted(() => {
+  window.addEventListener(USER_STATE_CHANGED, handleUserStateChanged);
+});
+
+onUnmounted(() => {
+  window.removeEventListener(USER_STATE_CHANGED, handleUserStateChanged);
+});
 
 const roleName = computed(() => {
   const role = currentUser.value?.role;

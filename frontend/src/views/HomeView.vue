@@ -5,11 +5,6 @@
         <h2>养老服务数据分析系统</h2>
       </div>
       <div class="header-right">
-        <span class="user-name">
-          <el-icon><User /></el-icon>
-          {{ currentUser?.username || "未登录" }}
-        </span>
-        <el-divider direction="vertical" />
         <el-button
           v-if="isInstitution"
           size="small"
@@ -39,6 +34,12 @@
           <el-icon><Cpu /></el-icon>
           训练模型
         </el-button>
+        <el-divider direction="vertical" />
+        <span class="user-name">
+          <el-icon><User /></el-icon>
+          {{ currentUser?.username || "未登录" }}
+        </span>
+
         <el-button size="small" @click="logout" style="margin-left: 10px">
           <el-icon><SwitchButton /></el-icon>
           退出登录
