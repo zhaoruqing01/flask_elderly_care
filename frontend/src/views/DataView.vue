@@ -61,6 +61,17 @@
           <el-table-column prop="prediction_date" label="预测日期" />
           <el-table-column prop="predicted_demand" label="预测需求量" />
         </el-table>
+        <div class="pagination" style="margin-top: 20px">
+          <el-pagination
+            v-model:current-page="predictionCurrentPage"
+            v-model:page-size="predictionPageSize"
+            :page-sizes="[10, 20, 50, 100]"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="totalPredictions"
+            @size-change="handlePredictionSizeChange"
+            @current-change="handlePredictionCurrentChange"
+          />
+        </div>
       </el-card>
 
       <!-- 社区信息管理 -->
@@ -922,6 +933,9 @@ const services = ref(["助餐", "助医", "保洁", "陪护", "康复"]);
 const caregiversData = ref([]);
 const schedulesData = ref([]);
 const predictionsData = ref([]);
+const totalPredictions = ref(0);
+const predictionCurrentPage = ref(1);
+const predictionPageSize = ref(20);
 const communitiesFullData = ref([]);
 
 // 弹窗状态管理
@@ -1116,10 +1130,8 @@ const refreshData = async () => {
     communitiesFullData.value = commRes.data;
     communities.value = commRes.data.map((c: any) => c.name);
 
-    const predRes = await axios.get("/api/data/predictions", {
-      params: { role },
-    });
-    predictionsData.value = predRes.data;
+    // 加载预测数据
+    await loadPredictions();
 
     if (isInstitution.value || isCaregiver.value) {
       const cgRes = await axios.get("/api/data/caregivers", {
@@ -1141,6 +1153,7 @@ const refreshData = async () => {
     loadSeniorsData();
     loadHealthRecords();
     loadServiceRecords();
+    loadPredictions();
     ElMessage.success("刷新数据成功");
   } catch (error) {
     console.error("加载数据失败:", error);
@@ -1189,6 +1202,19 @@ const loadServiceRecords = async () => {
   });
   serviceRecords.value = res.data.items;
   totalServiceRecords.value = res.data.total;
+};
+
+const loadPredictions = async () => {
+  const role = getUserRole();
+  const res = await axios.get("/api/data/predictions", {
+    params: {
+      page: predictionCurrentPage.value,
+      page_size: predictionPageSize.value,
+      role,
+    },
+  });
+  predictionsData.value = res.data.items;
+  totalPredictions.value = res.data.total;
 };
 
 // 提交逻辑
@@ -1795,6 +1821,14 @@ const handleServiceSizeChange = (val: number) => {
 const handleServiceCurrentChange = (val: number) => {
   serviceCurrentPage.value = val;
   loadServiceRecords();
+};
+const handlePredictionSizeChange = (val: number) => {
+  predictionPageSize.value = val;
+  loadPredictions();
+};
+const handlePredictionCurrentChange = (val: number) => {
+  predictionCurrentPage.value = val;
+  loadPredictions();
 };
 const filterHealthRecords = () => {
   healthCurrentPage.value = 1;

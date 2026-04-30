@@ -280,10 +280,15 @@ def get_services_api():
 # --- 预测与报表 ---
 @bp.route('/predictions', methods=['GET'])
 def get_predictions_api():
-    """获取预测需求结果 - 所有角色可访问"""
-    community_id = request.args.get('community_id')
-    service_type = request.args.get('service_type')
-    return jsonify(data_service.get_predictions(community_id, service_type))
+    """获取预测需求结果 - 所有角色可访问(支持分页)"""
+    try:
+        page = int(request.args.get('page', 1))
+        page_size = int(request.args.get('page_size', 20))
+        community_id = request.args.get('community_id')
+        service_type = request.args.get('service_type')
+        return jsonify(data_service.get_predictions(community_id, service_type, page, page_size))
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 @bp.route('/reports/community', methods=['GET'])
 @roles_required('institution', 'regulatory')

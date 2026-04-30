@@ -308,11 +308,12 @@ class DataService:
         db.execute("DELETE FROM service_record WHERE id=?", (record_id,))
 
     # --- 预测结果管理 ---
-    def get_predictions(self, community_id=None, service_type=None):
-        """获取预测需求结果"""
+    def get_predictions(self, community_id=None, service_type=None, page=1, page_size=20):
+        """获取预测需求结果(支持分页)"""
         # 兼容两种字段名: prediction_date/predict_date
         try:
-            query = "SELECT community_id, service_type, prediction_date, predicted_demand FROM prediction_result"
+            base_query = "SELECT community_id, service_type, prediction_date, predicted_demand FROM prediction_result"
+            count_query = "SELECT COUNT(*) FROM prediction_result"
             params = []
             conditions = []
             if community_id:
@@ -323,15 +324,29 @@ class DataService:
                 params.append(service_type)
             
             if conditions:
-                query += " WHERE " + " AND ".join(conditions)
+                where_clause = " WHERE " + " AND ".join(conditions)
+                base_query += where_clause
+                count_query += where_clause
             
-            result = db.execute(query, params)
-            return [{
-                'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': r[3]
-            } for r in result]
+            # 获取总数
+            total = db.execute(count_query, params)[0][0]
+            
+            # 分页
+            offset = (page - 1) * page_size
+            base_query += " ORDER BY prediction_date DESC LIMIT ? OFFSET ?"
+            params.extend([page_size, offset])
+            
+            result = db.execute(base_query, params)
+            return {
+                'items': [{
+                    'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': float(r[3])
+                } for r in result],
+                'total': total
+            }
         except Exception:
             # 如果新字段不存在,使用旧字段
-            query = "SELECT community_id, service_type, predict_date, predicted_demand FROM prediction_result"
+            base_query = "SELECT community_id, service_type, predict_date, predicted_demand FROM prediction_result"
+            count_query = "SELECT COUNT(*) FROM prediction_result"
             params = []
             conditions = []
             if community_id:
@@ -342,12 +357,25 @@ class DataService:
                 params.append(service_type)
             
             if conditions:
-                query += " WHERE " + " AND ".join(conditions)
+                where_clause = " WHERE " + " AND ".join(conditions)
+                base_query += where_clause
+                count_query += where_clause
             
-            result = db.execute(query, params)
-            return [{
-                'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': r[3]
-            } for r in result]
+            # 获取总数
+            total = db.execute(count_query, params)[0][0]
+            
+            # 分页
+            offset = (page - 1) * page_size
+            base_query += " ORDER BY predict_date DESC LIMIT ? OFFSET ?"
+            params.extend([page_size, offset])
+            
+            result = db.execute(base_query, params)
+            return {
+                'items': [{
+                    'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': float(r[3])
+                } for r in result],
+                'total': total
+            }
 
     # --- 统计报表功能 ---
     def get_community_stats(self, community_id=None):
