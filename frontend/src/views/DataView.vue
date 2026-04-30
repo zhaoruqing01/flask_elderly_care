@@ -913,20 +913,20 @@ const serviceChartRef = ref<HTMLElement>();
 const seniorsData = ref([]);
 const totalSeniors = ref(0);
 const currentPage = ref(1);
-const pageSize = ref(20);
+const pageSize = ref(10);
 const tableFilter = ref("all");
 const communities = ref([]);
 
 const healthRecords = ref([]);
 const totalHealthRecords = ref(0);
 const healthCurrentPage = ref(1);
-const healthPageSize = ref(20);
+const healthPageSize = ref(10);
 const dateRange = ref([]);
 
 const serviceRecords = ref([]);
 const totalServiceRecords = ref(0);
 const serviceCurrentPage = ref(1);
-const servicePageSize = ref(20);
+const servicePageSize = ref(10);
 const serviceTypeFilter = ref("all");
 const services = ref(["助餐", "助医", "保洁", "陪护", "康复"]);
 
@@ -935,7 +935,7 @@ const schedulesData = ref([]);
 const predictionsData = ref([]);
 const totalPredictions = ref(0);
 const predictionCurrentPage = ref(1);
-const predictionPageSize = ref(20);
+const predictionPageSize = ref(10);
 const communitiesFullData = ref([]);
 
 // 弹窗状态管理
