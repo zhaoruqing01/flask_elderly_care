@@ -5,7 +5,11 @@
         <h2>养老服务数据分析系统</h2>
       </div>
       <div class="header-right">
-        <el-tag type="primary">模拟数据</el-tag>
+        <span class="user-name">
+          <el-icon><User /></el-icon>
+          {{ currentUser?.username || "未登录" }}
+        </span>
+        <el-divider direction="vertical" />
         <el-button
           v-if="isInstitution"
           size="small"
@@ -34,6 +38,10 @@
         >
           <el-icon><Cpu /></el-icon>
           训练模型
+        </el-button>
+        <el-button size="small" @click="logout" style="margin-left: 10px">
+          <el-icon><SwitchButton /></el-icon>
+          退出登录
         </el-button>
       </div>
     </el-header>
@@ -294,6 +302,7 @@ import {
   Document,
   Refresh,
   Star,
+  SwitchButton,
   Tools,
   User,
   Warning,
@@ -1180,6 +1189,19 @@ onMounted(() => {
 .header-right {
   display: flex;
   align-items: center;
+}
+
+.user-name {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  margin-left: 10px;
+  font-size: 0.9rem;
+  color: #606266;
+}
+
+.user-name .el-icon {
+  font-size: 1rem;
 }
 
 .metric-card {

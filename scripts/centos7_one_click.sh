@@ -378,7 +378,15 @@ init_sqlite() {
   info "初始化 SQLite 数据..."
   mkdir -p "${LOG_DIR}"
   export PYTHONPATH="${PROJECT_ROOT}"
-  python3 "${BACKEND_DIR}/scripts/init_data.py" > "${LOG_DIR}/init_data.log" 2>&1
+  
+  # 步骤1: 执行数据库结构初始化 (包含所有表和字段)
+  python3 "${BACKEND_DIR}/app/db_init.py" > "${LOG_DIR}/init_db.log" 2>&1
+  
+  # 步骤2: 生成测试数据
+  if [ -f "${BACKEND_DIR}/data_generator.py" ]; then
+    python3 "${BACKEND_DIR}/data_generator.py" > "${LOG_DIR}/data_gen.log" 2>&1
+  fi
+  
   info "SQLite 初始化完成！"
 }
 

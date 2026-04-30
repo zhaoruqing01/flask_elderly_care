@@ -26,7 +26,7 @@
           <span>服务分析</span>
         </el-menu-item>
 
-        <el-menu-item index="/prediction">
+        <el-menu-item index="/prediction" v-if="canSeePrediction">
           <el-icon><TrendCharts /></el-icon>
           <span>需求预测</span>
         </el-menu-item>
@@ -36,12 +36,12 @@
           <span>数据管理</span>
         </el-menu-item>
 
-        <el-menu-item index="/chat">
+        <el-menu-item index="/chat" v-if="canSeeChat">
           <el-icon><ChatDotRound /></el-icon>
           <span>AI聊天</span>
         </el-menu-item>
 
-        <el-menu-item index="/admin">
+        <el-menu-item index="/admin" v-if="canSeeAdmin">
           <el-icon><Tools /></el-icon>
           <span>系统管理</span>
         </el-menu-item>
@@ -78,7 +78,7 @@ import {
   Tools,
   TrendCharts,
 } from "@element-plus/icons-vue";
-import { computed } from "vue";
+import { computed, watch } from "vue";
 import { useRoute, useRouter } from "vue-router";
 
 const route = useRoute();
@@ -94,19 +94,40 @@ const roleName = computed(() => {
   return "未知角色";
 });
 
+// 根据角色显示菜单
 const canSeePrediction = computed(() => {
   const role = currentUser.value?.role;
+  // 机构管理员和监管部门可以看到需求预测
   return role === "institution" || role === "regulatory";
 });
 
 const canSeeChat = computed(() => {
   const role = currentUser.value?.role;
+  // 机构管理员和护工可以看到AI聊天
   return role === "institution" || role === "caregiver";
 });
 
 const canSeeAdmin = computed(() => {
+  // 只有机构管理员可以看到系统管理
   return currentUser.value?.role === "institution";
 });
+
+// 调试：打印当前用户信息和权限
+watch(
+  currentUser,
+  (user) => {
+    console.log("当前用户:", user);
+    console.log(
+      "权限 - 需求预测:",
+      canSeePrediction.value,
+      "AI聊天:",
+      canSeeChat.value,
+      "系统管理:",
+      canSeeAdmin.value,
+    );
+  },
+  { immediate: true },
+);
 
 const activeMenu = computed(() => {
   return route.path;

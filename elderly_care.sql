@@ -94,6 +94,41 @@ CREATE TABLE IF NOT EXISTS `prediction_result` (
     KEY `idx_predict_date` (`predict_date`)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='服务需求预测结果表';
 
+-- -----------------------------------------------------
+-- 1.6 护工表 (caregiver)
+-- 用途: 存储护工基本信息
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `caregiver` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `caregiver_id` VARCHAR(50) UNIQUE COMMENT '护工ID',
+    `name` VARCHAR(50) COMMENT '姓名',
+    `community_id` VARCHAR(50) COMMENT '所属社区',
+    `qualification` VARCHAR(100) COMMENT '资质/证书',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_caregiver_id` (`caregiver_id`),
+    KEY `idx_community_id` (`community_id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='护工信息表';
+
+-- -----------------------------------------------------
+-- 1.7 排班表 (schedule)
+-- 用途: 存储护工排班信息
+-- -----------------------------------------------------
+CREATE TABLE IF NOT EXISTS `schedule` (
+    `id` INT NOT NULL AUTO_INCREMENT COMMENT '主键ID',
+    `caregiver_id` VARCHAR(50) COMMENT '护工ID',
+    `elderly_id` VARCHAR(36) COMMENT '老人ID',
+    `service_type` VARCHAR(20) COMMENT '服务类型',
+    `service_date` VARCHAR(20) COMMENT '服务日期',
+    `service_time_slot` VARCHAR(50) COMMENT '时间段',
+    `status` VARCHAR(20) DEFAULT 'pending' COMMENT '状态: pending/completed/cancelled',
+    `created_at` DATETIME DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
+    PRIMARY KEY (`id`),
+    KEY `idx_caregiver_id` (`caregiver_id`),
+    KEY `idx_elderly_id` (`elderly_id`),
+    KEY `idx_service_date` (`service_date`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COMMENT='护工排班表';
+
 -- =====================================================
 -- 第二部分：初始数据插入 (INSERT INTO)
 -- =====================================================
@@ -167,6 +202,28 @@ INSERT INTO `prediction_result` (`community_id`, `service_type`, `predict_date`,
 ('C002', '助餐', '2024-02-01', 150.00),
 ('C002', '保洁', '2024-02-01', 80.00),
 ('C003', '陪护', '2024-02-01', 60.00);
+
+-- -----------------------------------------------------
+-- 2.6 插入护工数据 (caregiver)
+-- 用途: 系统初始化时填充基础护工数据
+-- -----------------------------------------------------
+INSERT INTO `caregiver` (`caregiver_id`, `name`, `community_id`, `qualification`) VALUES
+('CG001', '护理员A', 'C001', '初级护理员'),
+('CG002', '护理员B', 'C001', '中级护理员'),
+('CG003', '护理员C', 'C002', '高级护理员'),
+('CG004', '护理员D', 'C002', '初级护理员'),
+('CG005', '护理员E', 'C003', '中级护理员');
+
+-- -----------------------------------------------------
+-- 2.7 插入排班数据 (schedule)
+-- 用途: 系统初始化时填充基础排班数据
+-- -----------------------------------------------------
+INSERT INTO `schedule` (`caregiver_id`, `elderly_id`, `service_type`, `service_date`, `service_time_slot`, `status`) VALUES
+('CG001', 'E00001', '助餐', '2024-01-15', '08:00-09:00', 'completed'),
+('CG001', 'E00002', '助餐', '2024-01-15', '09:00-10:00', 'completed'),
+('CG002', 'E00001', '助医', '2024-01-16', '10:00-11:00', 'completed'),
+('CG003', 'E00003', '保洁', '2024-01-16', '14:00-16:00', 'pending'),
+('CG004', 'E00004', '陪护', '2024-01-17', '09:00-11:00', 'pending');
 
 
 -- =====================================================

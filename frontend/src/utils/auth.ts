@@ -5,15 +5,37 @@ export type User = { username: string; role: string };
 
 // 初始化一些默认用户以便测试
 function initDefaultUsers() {
-  const users = localStorage.getItem(USERS_KEY);
-  if (!users) {
-    const defaultUsers = [
-      { username: "admin", password: "111111", role: "admin" },
-      { username: "caregiver1", password: "111111", role: "caregiver" },
-      { username: "institution1", password: "111111", role: "institution" },
-      { username: "regulatory1", password: "111111", role: "regulatory" },
-    ];
-    localStorage.setItem(USERS_KEY, JSON.stringify(defaultUsers));
+  const existingUsers = localStorage.getItem(USERS_KEY);
+  let users: any[] = [];
+
+  if (existingUsers) {
+    try {
+      users = JSON.parse(existingUsers);
+    } catch (e) {
+      users = [];
+    }
+  }
+
+  // 定义默认用户
+  const defaultUsers = [
+    { username: "admin", password: "123456", role: "institution" },
+    { username: "caregiver1", password: "123456", role: "caregiver" },
+    { username: "gov", password: "123456", role: "regulatory" },
+  ];
+
+  // 检查每个默认用户是否存在，不存在则添加
+  let hasChanges = false;
+  defaultUsers.forEach((defaultUser) => {
+    const exists = users.some((u) => u.username === defaultUser.username);
+    if (!exists) {
+      users.push(defaultUser);
+      hasChanges = true;
+    }
+  });
+
+  // 如果有新增用户，保存到 localStorage
+  if (hasChanges || !existingUsers) {
+    localStorage.setItem(USERS_KEY, JSON.stringify(users));
   }
 }
 initDefaultUsers();

@@ -140,49 +140,62 @@ def add_schedule_api():
         return jsonify({'error': str(e)}), 400
 
 # --- 健康记录 ---
-@bp.route('/health-records', methods=['GET'])
-def get_health_records_api():
-    try:
-        page = int(request.args.get('page', 1))
-        page_size = int(request.args.get('page_size', 20))
-        start_date = request.args.get('start_date', '')
-        end_date = request.args.get('end_date', '')
-        return jsonify(data_service.get_health_records(page, page_size, start_date, end_date))
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@bp.route('/health-records', methods=['POST'])
-@roles_required('caregiver')
-def add_health_record_api():
-    try:
-        data_service.add_health_record(request.json)
-        return jsonify({'message': '上报成功'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+@bp.route('/health-records', methods=['GET', 'POST'])
+def health_records_api():
+    """健康记录接口 - GET查询, POST新增"""
+    if request.method == 'POST':
+        # POST 需要护工权限
+        role = request.headers.get('X-User-Role') or request.args.get('role')
+        if not role:
+            return jsonify({'error': '未授权'}), 401
+        if role != 'caregiver':
+            return jsonify({'error': '权限不足'}), 403
+        try:
+            data_service.add_health_record(request.json)
+            return jsonify({'message': '上报成功'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+    else:
+        # GET 查询所有角色都可以访问
+        try:
+            page = int(request.args.get('page', 1))
+            page_size = int(request.args.get('page_size', 20))
+            start_date = request.args.get('start_date', '')
+            end_date = request.args.get('end_date', '')
+            return jsonify(data_service.get_health_records(page, page_size, start_date, end_date))
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
 # --- 服务记录 ---
-@bp.route('/service-records', methods=['GET'])
-def get_service_records_api():
-    try:
-        page = int(request.args.get('page', 1))
-        page_size = int(request.args.get('page_size', 20))
-        service_type = request.args.get('service_type', '')
-        return jsonify(data_service.get_service_records(page, page_size, service_type))
-    except Exception as e:
-        return jsonify({'error': str(e)}), 500
-
-@bp.route('/service-records', methods=['POST'])
-@roles_required('caregiver')
-def add_service_record_api():
-    try:
-        data_service.add_service_record(request.json)
-        return jsonify({'message': '提交成功'})
-    except Exception as e:
-        return jsonify({'error': str(e)}), 400
+@bp.route('/service-records', methods=['GET', 'POST'])
+def service_records_api():
+    """服务记录接口 - GET查询, POST新增"""
+    if request.method == 'POST':
+        # POST 需要护工权限
+        role = request.headers.get('X-User-Role') or request.args.get('role')
+        if not role:
+            return jsonify({'error': '未授权'}), 401
+        if role != 'caregiver':
+            return jsonify({'error': '权限不足'}), 403
+        try:
+            data_service.add_service_record(request.json)
+            return jsonify({'message': '提交成功'})
+        except Exception as e:
+            return jsonify({'error': str(e)}), 400
+    else:
+        # GET 查询所有角色都可以访问
+        try:
+            page = int(request.args.get('page', 1))
+            page_size = int(request.args.get('page_size', 20))
+            service_type = request.args.get('service_type', '')
+            return jsonify(data_service.get_service_records(page, page_size, service_type))
+        except Exception as e:
+            return jsonify({'error': str(e)}), 500
 
 # --- 预测与报表 ---
 @bp.route('/predictions', methods=['GET'])
 def get_predictions_api():
+    """获取预测需求结果 - 所有角色可访问"""
     community_id = request.args.get('community_id')
     service_type = request.args.get('service_type')
     return jsonify(data_service.get_predictions(community_id, service_type))

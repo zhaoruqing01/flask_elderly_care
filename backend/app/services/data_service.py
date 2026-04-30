@@ -29,19 +29,36 @@ class DataService:
     # --- 社区管理 ---
     def get_communities(self):
         """获取所有社区"""
-        query = "SELECT community_id, name, total_population, elderly_population FROM community"
-        result = db.execute(query)
-        return [{'community_id': r[0], 'name': r[1], 'total_population': r[2], 'elderly_population': r[3]} for r in result]
+        # 兼容两种字段名: total_population/population, elderly_population/elderly_count
+        try:
+            query = "SELECT community_id, name, total_population, elderly_population FROM community"
+            result = db.execute(query)
+            return [{'community_id': r[0], 'name': r[1], 'total_population': r[2], 'elderly_population': r[3]} for r in result]
+        except Exception:
+            # 如果新字段不存在,使用旧字段
+            query = "SELECT community_id, name, population, elderly_count FROM community"
+            result = db.execute(query)
+            return [{'community_id': r[0], 'name': r[1], 'total_population': r[2], 'elderly_population': r[3]} for r in result]
 
     def add_community(self, data):
         """新增社区"""
-        query = "INSERT INTO community (community_id, name, total_population, elderly_population) VALUES (?, ?, ?, ?)"
-        db.execute(query, (data['community_id'], data['name'], data['total_population'], data['elderly_population']))
+        # 兼容两种字段名
+        try:
+            query = "INSERT INTO community (community_id, name, total_population, elderly_population) VALUES (?, ?, ?, ?)"
+            db.execute(query, (data['community_id'], data['name'], data['total_population'], data['elderly_population']))
+        except Exception:
+            query = "INSERT INTO community (community_id, name, population, elderly_count) VALUES (?, ?, ?, ?)"
+            db.execute(query, (data['community_id'], data['name'], data['total_population'], data['elderly_population']))
 
     def update_community(self, community_id, data):
         """更新社区"""
-        query = "UPDATE community SET name=?, total_population=?, elderly_population=? WHERE community_id=?"
-        db.execute(query, (data['name'], data['total_population'], data['elderly_population'], community_id))
+        # 兼容两种字段名
+        try:
+            query = "UPDATE community SET name=?, total_population=?, elderly_population=? WHERE community_id=?"
+            db.execute(query, (data['name'], data['total_population'], data['elderly_population'], community_id))
+        except Exception:
+            query = "UPDATE community SET name=?, population=?, elderly_count=? WHERE community_id=?"
+            db.execute(query, (data['name'], data['total_population'], data['elderly_population'], community_id))
 
     def delete_community(self, community_id):
         """删除社区 (仅限未关联老人的社区)"""
@@ -189,52 +206,103 @@ class DataService:
     # --- 服务记录管理 ---
     def get_service_records(self, page=1, page_size=20, service_type=''):
         """获取服务记录分页数据"""
-        query = "SELECT elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id FROM service_record"
-        params = []
-        if service_type:
-            query += " WHERE service_type = ?"
-            params.append(service_type)
-        
-        count_query = "SELECT COUNT(*) FROM service_record"
-        if service_type:
-            count_query += " WHERE service_type = ?"
-        total = db.execute(count_query, params)[0][0]
+        # 兼容有无 caregiver_id 字段的情况
+        try:
+            query = "SELECT elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id FROM service_record"
+            params = []
+            if service_type:
+                query += " WHERE service_type = ?"
+                params.append(service_type)
+            
+            count_query = "SELECT COUNT(*) FROM service_record"
+            if service_type:
+                count_query += " WHERE service_type = ?"
+            total = db.execute(count_query, params)[0][0]
 
-        offset = (page - 1) * page_size
-        query += " ORDER BY service_date DESC LIMIT ? OFFSET ?"
-        params.extend([page_size, offset])
-        
-        result = db.execute(query, params)
-        return {'items': [{
-            'elderly_id': r[0], 'community_id': r[1], 'service_type': r[2], 
-            'service_date': r[3], 'duration': r[4], 'satisfaction': r[5], 'caregiver_id': r[6]
-        } for r in result], 'total': total}
+            offset = (page - 1) * page_size
+            query += " ORDER BY service_date DESC LIMIT ? OFFSET ?"
+            params.extend([page_size, offset])
+            
+            result = db.execute(query, params)
+            return {'items': [{
+                'elderly_id': r[0], 'community_id': r[1], 'service_type': r[2], 
+                'service_date': r[3], 'duration': r[4], 'satisfaction': r[5], 'caregiver_id': r[6] or ''
+            } for r in result], 'total': total}
+        except Exception:
+            # 如果没有 caregiver_id 字段,返回空值
+            query = "SELECT elderly_id, community_id, service_type, service_date, duration, satisfaction FROM service_record"
+            params = []
+            if service_type:
+                query += " WHERE service_type = ?"
+                params.append(service_type)
+            
+            count_query = "SELECT COUNT(*) FROM service_record"
+            if service_type:
+                count_query += " WHERE service_type = ?"
+            total = db.execute(count_query, params)[0][0]
+
+            offset = (page - 1) * page_size
+            query += " ORDER BY service_date DESC LIMIT ? OFFSET ?"
+            params.extend([page_size, offset])
+            
+            result = db.execute(query, params)
+            return {'items': [{
+                'elderly_id': r[0], 'community_id': r[1], 'service_type': r[2], 
+                'service_date': r[3], 'duration': r[4], 'satisfaction': r[5], 'caregiver_id': ''
+            } for r in result], 'total': total}
 
     def add_service_record(self, data):
         """新增服务记录"""
-        query = "INSERT INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
-        db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction'], data['caregiver_id']))
+        # 兼容有无 caregiver_id 字段的情况
+        try:
+            query = "INSERT INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction, caregiver_id) VALUES (?, ?, ?, ?, ?, ?, ?)"
+            db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction'], data.get('caregiver_id', '')))
+        except Exception:
+            # 如果没有 caregiver_id 字段,忽略该字段
+            query = "INSERT INTO service_record (elderly_id, community_id, service_type, service_date, duration, satisfaction) VALUES (?, ?, ?, ?, ?, ?)"
+            db.execute(query, (data['elderly_id'], data['community_id'], data['service_type'], data['service_date'], data['duration'], data['satisfaction']))
 
     # --- 预测结果管理 ---
     def get_predictions(self, community_id=None, service_type=None):
         """获取预测需求结果"""
-        query = "SELECT community_id, service_type, prediction_date, predicted_demand FROM prediction_result"
-        params = []
-        conditions = []
-        if community_id:
-            conditions.append("community_id = ?")
-            params.append(community_id)
-        if service_type:
-            conditions.append("service_type = ?")
-            params.append(service_type)
-        
-        if conditions:
-            query += " WHERE " + " AND ".join(conditions)
-        
-        result = db.execute(query, params)
-        return [{
-            'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': r[3]
-        } for r in result]
+        # 兼容两种字段名: prediction_date/predict_date
+        try:
+            query = "SELECT community_id, service_type, prediction_date, predicted_demand FROM prediction_result"
+            params = []
+            conditions = []
+            if community_id:
+                conditions.append("community_id = ?")
+                params.append(community_id)
+            if service_type:
+                conditions.append("service_type = ?")
+                params.append(service_type)
+            
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            
+            result = db.execute(query, params)
+            return [{
+                'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': r[3]
+            } for r in result]
+        except Exception:
+            # 如果新字段不存在,使用旧字段
+            query = "SELECT community_id, service_type, predict_date, predicted_demand FROM prediction_result"
+            params = []
+            conditions = []
+            if community_id:
+                conditions.append("community_id = ?")
+                params.append(community_id)
+            if service_type:
+                conditions.append("service_type = ?")
+                params.append(service_type)
+            
+            if conditions:
+                query += " WHERE " + " AND ".join(conditions)
+            
+            result = db.execute(query, params)
+            return [{
+                'community_id': r[0], 'service_type': r[1], 'prediction_date': r[2], 'predicted_demand': r[3]
+            } for r in result]
 
     # --- 统计报表功能 ---
     def get_community_stats(self, community_id=None):

@@ -133,6 +133,19 @@
           <el-table-column prop="name" label="姓名" />
           <el-table-column prop="community_id" label="所属社区" />
           <el-table-column prop="qualification" label="资质" />
+          <el-table-column label="操作" width="150">
+            <template #default="scope">
+              <el-button size="small" @click="handleEditCaregiver(scope.row)"
+                >修改</el-button
+              >
+              <el-button
+                size="small"
+                type="danger"
+                @click="handleDeleteCaregiver(scope.row.caregiver_id)"
+                >删除</el-button
+              >
+            </template>
+          </el-table-column>
         </el-table>
       </el-card>
 
@@ -368,8 +381,8 @@
             :page-sizes="[10, 20, 50, 100]"
             layout="total, sizes, prev, pager, next, jumper"
             :total="totalServiceRecords"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
+            @size-change="handleServiceSizeChange"
+            @current-change="handleServiceCurrentChange"
           />
         </div>
       </el-card>
@@ -380,57 +393,107 @@
     <el-dialog
       v-model="dialogs.community.visible"
       :title="dialogs.community.isEdit ? '编辑社区' : '新增社区'"
-      width="500px"
+      width="550px"
+      :close-on-click-modal="false"
     >
-      <el-form :model="dialogs.community.form" label-width="100px">
-        <el-form-item label="社区ID">
+      <el-form
+        ref="communityFormRef"
+        :model="dialogs.community.form"
+        :rules="communityRules"
+        label-width="100px"
+      >
+        <el-form-item label="社区ID" prop="community_id">
           <el-input
             v-model="dialogs.community.form.community_id"
             :disabled="dialogs.community.isEdit"
+            placeholder="请输入社区ID，如: C006"
           />
         </el-form-item>
-        <el-form-item label="社区名称">
-          <el-input v-model="dialogs.community.form.name" />
+        <el-form-item label="社区名称" prop="name">
+          <el-input
+            v-model="dialogs.community.form.name"
+            placeholder="请输入社区名称"
+          />
         </el-form-item>
-        <el-form-item label="总人口">
-          <el-input-number v-model="dialogs.community.form.total_population" />
+        <el-form-item label="总人口" prop="total_population">
+          <el-input-number
+            v-model="dialogs.community.form.total_population"
+            :min="0"
+            :max="100000"
+            style="width: 100%"
+          />
         </el-form-item>
-        <el-form-item label="老年人口">
+        <el-form-item label="老年人口" prop="elderly_population">
           <el-input-number
             v-model="dialogs.community.form.elderly_population"
+            :min="0"
+            :max="dialogs.community.form.total_population"
+            style="width: 100%"
           />
+          <div style="color: #999; font-size: 12px; margin-top: 5px">
+            老年人口不能超过总人口
+          </div>
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogs.community.visible = false">取消</el-button>
-        <el-button type="primary" @click="submitCommunity">提交</el-button>
+        <el-button type="primary" @click="submitCommunity" :loading="submitting"
+          >提交</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 老人弹窗 -->
-    <el-dialog v-model="dialogs.elderly.visible" :title="dialogs.elderly.isEdit ? '编辑老人信息' : '新增老人'" width="500px">
-      <el-form :model="dialogs.elderly.form" label-width="100px">
-        <el-form-item label="老人ID">
-          <el-input v-model="dialogs.elderly.form.elderly_id" :disabled="dialogs.elderly.isEdit" />
+    <el-dialog
+      v-model="dialogs.elderly.visible"
+      :title="dialogs.elderly.isEdit ? '编辑老人信息' : '新增老人'"
+      width="550px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="elderlyFormRef"
+        :model="dialogs.elderly.form"
+        :rules="elderlyRules"
+        label-width="100px"
+      >
+        <el-form-item label="老人ID" prop="elderly_id">
+          <el-input
+            v-model="dialogs.elderly.form.elderly_id"
+            :disabled="dialogs.elderly.isEdit"
+            placeholder="请输入老人ID，如: E00011"
+          />
         </el-form-item>
-        <el-form-item label="姓名">
-          <el-input v-model="dialogs.elderly.form.name" />
+        <el-form-item label="姓名" prop="name">
+          <el-input
+            v-model="dialogs.elderly.form.name"
+            placeholder="请输入姓名"
+          />
         </el-form-item>
-        <el-form-item label="年龄">
-          <el-input-number v-model="dialogs.elderly.form.age" />
+        <el-form-item label="年龄" prop="age">
+          <el-input-number
+            v-model="dialogs.elderly.form.age"
+            :min="60"
+            :max="120"
+            style="width: 100%"
+          />
         </el-form-item>
-        <el-form-item label="性别">
-          <el-select v-model="dialogs.elderly.form.gender">
+        <el-form-item label="性别" prop="gender">
+          <el-select v-model="dialogs.elderly.form.gender" style="width: 100%">
             <el-option label="男" value="男" />
             <el-option label="女" value="女" />
           </el-select>
         </el-form-item>
-        <el-form-item label="所属社区">
-          <el-select v-model="dialogs.elderly.form.community_id">
+        <el-form-item label="所属社区" prop="community_id">
+          <el-select
+            v-model="dialogs.elderly.form.community_id"
+            style="width: 100%"
+            placeholder="请选择社区"
+            filterable
+          >
             <el-option
               v-for="c in communitiesFullData"
               :key="c.community_id"
-              :label="c.name"
+              :label="`${c.name} (${c.community_id})`"
               :value="c.community_id"
             />
           </el-select>
@@ -438,40 +501,65 @@
       </el-form>
       <template #footer>
         <el-button @click="dialogs.elderly.visible = false">取消</el-button>
-        <el-button type="primary" @click="submitElderly">提交</el-button>
+        <el-button type="primary" @click="submitElderly" :loading="submitting"
+          >提交</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 护工弹窗 -->
     <el-dialog
       v-model="dialogs.caregiver.visible"
-      title="新增护工"
-      width="500px"
+      :title="dialogs.caregiver.isEdit ? '编辑护工' : '新增护工'"
+      width="550px"
+      :close-on-click-modal="false"
     >
-      <el-form :model="dialogs.caregiver.form" label-width="100px">
-        <el-form-item label="护工ID">
-          <el-input v-model="dialogs.caregiver.form.caregiver_id" />
+      <el-form
+        ref="caregiverFormRef"
+        :model="dialogs.caregiver.form"
+        :rules="caregiverRules"
+        label-width="100px"
+      >
+        <el-form-item label="护工ID" prop="caregiver_id">
+          <el-input
+            v-model="dialogs.caregiver.form.caregiver_id"
+            :disabled="dialogs.caregiver.isEdit"
+            placeholder="请输入护工ID，如: CG006"
+          />
         </el-form-item>
-        <el-form-item label="姓名">
-          <el-input v-model="dialogs.caregiver.form.name" />
+        <el-form-item label="姓名" prop="name">
+          <el-input
+            v-model="dialogs.caregiver.form.name"
+            placeholder="请输入姓名"
+          />
         </el-form-item>
-        <el-form-item label="所属社区">
-          <el-select v-model="dialogs.caregiver.form.community_id">
+        <el-form-item label="所属社区" prop="community_id">
+          <el-select
+            v-model="dialogs.caregiver.form.community_id"
+            style="width: 100%"
+            placeholder="请选择社区"
+            filterable
+          >
             <el-option
               v-for="c in communitiesFullData"
               :key="c.community_id"
-              :label="c.name"
+              :label="`${c.name} (${c.community_id})`"
               :value="c.community_id"
             />
           </el-select>
         </el-form-item>
-        <el-form-item label="资质">
-          <el-input v-model="dialogs.caregiver.form.qualification" />
+        <el-form-item label="资质" prop="qualification">
+          <el-input
+            v-model="dialogs.caregiver.form.qualification"
+            placeholder="请输入资质，如: 初级护理员"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogs.caregiver.visible = false">取消</el-button>
-        <el-button type="primary" @click="submitCaregiver">提交</el-button>
+        <el-button type="primary" @click="submitCaregiver" :loading="submitting"
+          >提交</el-button
+        >
       </template>
     </el-dialog>
 
@@ -479,40 +567,99 @@
     <el-dialog
       v-model="dialogs.healthRecord.visible"
       title="上报健康记录"
-      width="500px"
+      width="550px"
+      :close-on-click-modal="false"
     >
-      <el-form :model="dialogs.healthRecord.form" label-width="100px">
-        <el-form-item label="老人ID">
-          <el-input v-model="dialogs.healthRecord.form.elderly_id" />
+      <el-form
+        ref="healthRecordFormRef"
+        :model="dialogs.healthRecord.form"
+        :rules="healthRecordRules"
+        label-width="100px"
+      >
+        <el-form-item label="老人ID" prop="elderly_id">
+          <el-input
+            v-model="dialogs.healthRecord.form.elderly_id"
+            placeholder="请输入老人ID"
+          />
         </el-form-item>
-        <el-form-item label="记录日期">
+        <el-form-item label="记录日期" prop="record_date">
           <el-date-picker
             v-model="dialogs.healthRecord.form.record_date"
             type="date"
             value-format="YYYY-MM-DD"
+            style="width: 100%"
+            placeholder="选择日期"
           />
         </el-form-item>
-        <el-form-item label="收缩压">
-          <el-input-number v-model="dialogs.healthRecord.form.sbp" />
-        </el-form-item>
-        <el-form-item label="舒张压">
-          <el-input-number v-model="dialogs.healthRecord.form.dbp" />
-        </el-form-item>
-        <el-form-item label="血糖">
-          <el-input-number
-            v-model="dialogs.healthRecord.form.blood_sugar"
-            :precision="1"
-            :step="0.1"
-          />
-        </el-form-item>
-        <el-form-item label="心率">
-          <el-input-number v-model="dialogs.healthRecord.form.heart_rate" />
-        </el-form-item>
-        <el-form-item label="健康状态">
-          <el-select v-model="dialogs.healthRecord.form.health_status">
-            <el-option label="良好" value="良好" />
-            <el-option label="临界" value="临界" />
-            <el-option label="高危" value="高危" />
+        <el-row :gutter="10">
+          <el-col :span="12">
+            <el-form-item label="收缩压" prop="sbp">
+              <el-input-number
+                v-model="dialogs.healthRecord.form.sbp"
+                :min="50"
+                :max="250"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="舒张压" prop="dbp">
+              <el-input-number
+                v-model="dialogs.healthRecord.form.dbp"
+                :min="30"
+                :max="150"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-row :gutter="10">
+          <el-col :span="12">
+            <el-form-item label="血糖" prop="blood_sugar">
+              <el-input-number
+                v-model="dialogs.healthRecord.form.blood_sugar"
+                :precision="1"
+                :step="0.1"
+                :min="1"
+                :max="30"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="心率" prop="heart_rate">
+              <el-input-number
+                v-model="dialogs.healthRecord.form.heart_rate"
+                :min="40"
+                :max="200"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="健康状态" prop="health_status">
+          <el-select
+            v-model="dialogs.healthRecord.form.health_status"
+            style="width: 100%"
+          >
+            <el-option label="良好" value="良好">
+              <span style="float: left">良好</span>
+              <span style="float: right; color: #67c23a; font-size: 13px"
+                >正常范围</span
+              >
+            </el-option>
+            <el-option label="临界" value="临界">
+              <span style="float: left">临界</span>
+              <span style="float: right; color: #e6a23c; font-size: 13px"
+                >需关注</span
+              >
+            </el-option>
+            <el-option label="高危" value="高危">
+              <span style="float: left">高危</span>
+              <span style="float: right; color: #f56c6c; font-size: 13px"
+                >立即处理</span
+              >
+            </el-option>
           </el-select>
         </el-form-item>
       </el-form>
@@ -520,70 +667,170 @@
         <el-button @click="dialogs.healthRecord.visible = false"
           >取消</el-button
         >
-        <el-button type="primary" @click="submitHealthRecord">提交</el-button>
+        <el-button
+          type="primary"
+          @click="submitHealthRecord"
+          :loading="submitting"
+          >提交</el-button
+        >
       </template>
-      </el-dialog>
+    </el-dialog>
+
     <!-- 排班弹窗 -->
-    <el-dialog v-model="dialogs.schedule.visible" title="新增排班" width="500px">
-      <el-form :model="dialogs.schedule.form" label-width="100px">
-        <el-form-item label="护工ID">
-          <el-select v-model="dialogs.schedule.form.caregiver_id">
-            <el-option v-for="c in caregiversData" :key="c.caregiver_id" :label="c.name" :value="c.caregiver_id" />
+    <el-dialog
+      v-model="dialogs.schedule.visible"
+      title="新增排班"
+      width="550px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="scheduleFormRef"
+        :model="dialogs.schedule.form"
+        :rules="scheduleRules"
+        label-width="100px"
+      >
+        <el-form-item label="护工" prop="caregiver_id">
+          <el-select
+            v-model="dialogs.schedule.form.caregiver_id"
+            style="width: 100%"
+            placeholder="请选择护工"
+            filterable
+          >
+            <el-option
+              v-for="c in caregiversData"
+              :key="c.caregiver_id"
+              :label="`${c.name} (${c.caregiver_id})`"
+              :value="c.caregiver_id"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item label="老人ID">
-          <el-input v-model="dialogs.schedule.form.elderly_id" />
+        <el-form-item label="老人ID" prop="elderly_id">
+          <el-input
+            v-model="dialogs.schedule.form.elderly_id"
+            placeholder="请输入老人ID"
+          />
         </el-form-item>
-        <el-form-item label="服务类型">
-          <el-select v-model="dialogs.schedule.form.service_type">
+        <el-form-item label="服务类型" prop="service_type">
+          <el-select
+            v-model="dialogs.schedule.form.service_type"
+            style="width: 100%"
+          >
             <el-option v-for="s in services" :key="s" :label="s" :value="s" />
           </el-select>
         </el-form-item>
-        <el-form-item label="服务日期">
-          <el-date-picker v-model="dialogs.schedule.form.service_date" type="date" value-format="YYYY-MM-DD" />
+        <el-form-item label="服务日期" prop="service_date">
+          <el-date-picker
+            v-model="dialogs.schedule.form.service_date"
+            type="date"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+            placeholder="选择日期"
+          />
         </el-form-item>
-        <el-form-item label="时间段">
-          <el-input v-model="dialogs.schedule.form.service_time_slot" placeholder="如: 09:00-10:00" />
+        <el-form-item label="时间段" prop="service_time_slot">
+          <el-input
+            v-model="dialogs.schedule.form.service_time_slot"
+            placeholder="如: 09:00-10:00"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
         <el-button @click="dialogs.schedule.visible = false">取消</el-button>
-        <el-button type="primary" @click="submitSchedule">提交</el-button>
+        <el-button type="primary" @click="submitSchedule" :loading="submitting"
+          >提交</el-button
+        >
       </template>
     </el-dialog>
 
     <!-- 服务记录弹窗 -->
-    <el-dialog v-model="dialogs.serviceRecord.visible" title="提交服务记录" width="500px">
-      <el-form :model="dialogs.serviceRecord.form" label-width="100px">
-        <el-form-item label="老人ID">
-          <el-input v-model="dialogs.serviceRecord.form.elderly_id" />
+    <el-dialog
+      v-model="dialogs.serviceRecord.visible"
+      title="提交服务记录"
+      width="550px"
+      :close-on-click-modal="false"
+    >
+      <el-form
+        ref="serviceRecordFormRef"
+        :model="dialogs.serviceRecord.form"
+        :rules="serviceRecordRules"
+        label-width="100px"
+      >
+        <el-form-item label="老人ID" prop="elderly_id">
+          <el-input
+            v-model="dialogs.serviceRecord.form.elderly_id"
+            placeholder="请输入老人ID"
+          />
         </el-form-item>
-        <el-form-item label="所属社区">
-          <el-select v-model="dialogs.serviceRecord.form.community_id">
-            <el-option v-for="c in communitiesFullData" :key="c.community_id" :label="c.name" :value="c.community_id" />
+        <el-form-item label="所属社区" prop="community_id">
+          <el-select
+            v-model="dialogs.serviceRecord.form.community_id"
+            style="width: 100%"
+            placeholder="请选择社区"
+            filterable
+          >
+            <el-option
+              v-for="c in communitiesFullData"
+              :key="c.community_id"
+              :label="`${c.name} (${c.community_id})`"
+              :value="c.community_id"
+            />
           </el-select>
         </el-form-item>
-        <el-form-item label="服务类型">
-          <el-select v-model="dialogs.serviceRecord.form.service_type">
+        <el-form-item label="服务类型" prop="service_type">
+          <el-select
+            v-model="dialogs.serviceRecord.form.service_type"
+            style="width: 100%"
+          >
             <el-option v-for="s in services" :key="s" :label="s" :value="s" />
           </el-select>
         </el-form-item>
-        <el-form-item label="服务日期">
-          <el-date-picker v-model="dialogs.serviceRecord.form.service_date" type="date" value-format="YYYY-MM-DD" />
+        <el-form-item label="服务日期" prop="service_date">
+          <el-date-picker
+            v-model="dialogs.serviceRecord.form.service_date"
+            type="date"
+            value-format="YYYY-MM-DD"
+            style="width: 100%"
+            placeholder="选择日期"
+          />
         </el-form-item>
-        <el-form-item label="时长(分钟)">
-          <el-input-number v-model="dialogs.serviceRecord.form.duration" :min="1" />
-        </el-form-item>
-        <el-form-item label="满意度">
-          <el-rate v-model="dialogs.serviceRecord.form.satisfaction" :max="5" />
-        </el-form-item>
-        <el-form-item label="护工ID">
-          <el-input v-model="dialogs.serviceRecord.form.caregiver_id" />
+        <el-row :gutter="10">
+          <el-col :span="12">
+            <el-form-item label="时长(分钟)" prop="duration">
+              <el-input-number
+                v-model="dialogs.serviceRecord.form.duration"
+                :min="1"
+                :max="480"
+                style="width: 100%"
+              />
+            </el-form-item>
+          </el-col>
+          <el-col :span="12">
+            <el-form-item label="满意度" prop="satisfaction">
+              <el-rate
+                v-model="dialogs.serviceRecord.form.satisfaction"
+                :max="5"
+                show-score
+              />
+            </el-form-item>
+          </el-col>
+        </el-row>
+        <el-form-item label="护工ID" prop="caregiver_id">
+          <el-input
+            v-model="dialogs.serviceRecord.form.caregiver_id"
+            placeholder="请输入护工ID（可选）"
+          />
         </el-form-item>
       </el-form>
       <template #footer>
-        <el-button @click="dialogs.serviceRecord.visible = false">取消</el-button>
-        <el-button type="primary" @click="submitServiceRecord">提交</el-button>
+        <el-button @click="dialogs.serviceRecord.visible = false"
+          >取消</el-button
+        >
+        <el-button
+          type="primary"
+          @click="submitServiceRecord"
+          :loading="submitting"
+          >提交</el-button
+        >
       </template>
     </el-dialog>
   </el-container>
@@ -592,13 +839,29 @@
 <script setup lang="ts">
 import auth from "@/utils/auth";
 import axios from "@/utils/http";
-import { ElMessage, ElMessageBox } from "element-plus";
-import { computed, onMounted, reactive, ref } from "vue";
+import {
+  ElMessage,
+  ElMessageBox,
+  type FormInstance,
+  type FormRules,
+} from "element-plus";
+import { computed, onMounted, reactive, ref, watch } from "vue";
 
 const currentUser = computed(() => auth.getCurrentUser());
 const isInstitution = computed(() => currentUser.value?.role === "institution");
 const isCaregiver = computed(() => currentUser.value?.role === "caregiver");
 const isRegulatory = computed(() => currentUser.value?.role === "regulatory");
+
+// 表单引用
+const communityFormRef = ref<FormInstance>();
+const elderlyFormRef = ref<FormInstance>();
+const caregiverFormRef = ref<FormInstance>();
+const healthRecordFormRef = ref<FormInstance>();
+const scheduleFormRef = ref<FormInstance>();
+const serviceRecordFormRef = ref<FormInstance>();
+
+// 提交状态
+const submitting = ref(false);
 
 // 响应式数据
 const stats = ref({
@@ -653,6 +916,7 @@ const dialogs = reactive({
   },
   caregiver: {
     visible: false,
+    isEdit: false,
     form: { caregiver_id: "", name: "", community_id: "", qualification: "" },
   },
   schedule: {
@@ -699,27 +963,140 @@ const getHealthStatusType = (status: string) => {
   return "info";
 };
 
+// 表单验证规则
+const communityRules: FormRules = {
+  community_id: [
+    { required: true, message: "请输入社区ID", trigger: "blur" },
+    {
+      pattern: /^C\d+$/,
+      message: "社区ID格式不正确，如: C006",
+      trigger: "blur",
+    },
+  ],
+  name: [{ required: true, message: "请输入社区名称", trigger: "blur" }],
+  total_population: [
+    { required: true, message: "请输入总人口", trigger: "blur" },
+  ],
+  elderly_population: [
+    { required: true, message: "请输入老年人口", trigger: "blur" },
+  ],
+};
+
+const elderlyRules: FormRules = {
+  elderly_id: [
+    { required: true, message: "请输入老人ID", trigger: "blur" },
+    {
+      pattern: /^E\d+$/,
+      message: "老人ID格式不正确，如: E00011",
+      trigger: "blur",
+    },
+  ],
+  name: [{ required: true, message: "请输入姓名", trigger: "blur" }],
+  age: [{ required: true, message: "请输入年龄", trigger: "blur" }],
+  gender: [{ required: true, message: "请选择性别", trigger: "change" }],
+  community_id: [
+    { required: true, message: "请选择所属社区", trigger: "change" },
+  ],
+};
+
+const caregiverRules: FormRules = {
+  caregiver_id: [
+    { required: true, message: "请输入护工ID", trigger: "blur" },
+    {
+      pattern: /^CG\d+$/,
+      message: "护工ID格式不正确，如: CG006",
+      trigger: "blur",
+    },
+  ],
+  name: [{ required: true, message: "请输入姓名", trigger: "blur" }],
+  community_id: [
+    { required: true, message: "请选择所属社区", trigger: "change" },
+  ],
+};
+
+const healthRecordRules: FormRules = {
+  elderly_id: [{ required: true, message: "请输入老人ID", trigger: "blur" }],
+  record_date: [
+    { required: true, message: "请选择记录日期", trigger: "change" },
+  ],
+  sbp: [{ required: true, message: "请输入收缩压", trigger: "blur" }],
+  dbp: [{ required: true, message: "请输入舒张压", trigger: "blur" }],
+  blood_sugar: [{ required: true, message: "请输入血糖值", trigger: "blur" }],
+  heart_rate: [{ required: true, message: "请输入心率", trigger: "blur" }],
+  health_status: [
+    { required: true, message: "请选择健康状态", trigger: "change" },
+  ],
+};
+
+const scheduleRules: FormRules = {
+  caregiver_id: [{ required: true, message: "请选择护工", trigger: "change" }],
+  elderly_id: [{ required: true, message: "请输入老人ID", trigger: "blur" }],
+  service_type: [
+    { required: true, message: "请选择服务类型", trigger: "change" },
+  ],
+  service_date: [
+    { required: true, message: "请选择服务日期", trigger: "change" },
+  ],
+  service_time_slot: [
+    { required: true, message: "请输入时间段", trigger: "blur" },
+    {
+      pattern: /^\d{2}:\d{2}-\d{2}:\d{2}$/,
+      message: "时间格式不正确，如: 09:00-10:00",
+      trigger: "blur",
+    },
+  ],
+};
+
+const serviceRecordRules: FormRules = {
+  elderly_id: [{ required: true, message: "请输入老人ID", trigger: "blur" }],
+  community_id: [
+    { required: true, message: "请选择所属社区", trigger: "change" },
+  ],
+  service_type: [
+    { required: true, message: "请选择服务类型", trigger: "change" },
+  ],
+  service_date: [
+    { required: true, message: "请选择服务日期", trigger: "change" },
+  ],
+  duration: [{ required: true, message: "请输入服务时长", trigger: "blur" }],
+  satisfaction: [
+    { required: true, message: "请评价满意度", trigger: "change" },
+  ],
+};
+
+// 获取当前用户角色
+const getUserRole = () => {
+  return currentUser.value?.role || "admin";
+};
+
 // 刷新数据
 const refreshData = async () => {
   try {
-    const statsRes = await axios.get("/api/data/stats");
+    const role = getUserRole();
+    const statsRes = await axios.get("/api/data/stats", { params: { role } });
     stats.value = statsRes.data;
 
-    const commRes = await axios.get("/api/data/communities");
+    const commRes = await axios.get("/api/data/communities", {
+      params: { role },
+    });
     communitiesFullData.value = commRes.data;
     communities.value = commRes.data.map((c: any) => c.name);
 
-    const predRes = await axios.get("/api/data/predictions");
+    const predRes = await axios.get("/api/data/predictions", {
+      params: { role },
+    });
     predictionsData.value = predRes.data;
 
     if (isInstitution.value || isCaregiver.value) {
-      const cgRes = await axios.get("/api/data/caregivers");
+      const cgRes = await axios.get("/api/data/caregivers", {
+        params: { role },
+      });
       caregiversData.value = cgRes.data;
 
       const schRes = await axios.get("/api/data/schedules", {
         params: isCaregiver.value
-          ? { caregiver_id: currentUser.value?.username }
-          : {},
+          ? { caregiver_id: currentUser.value?.username, role }
+          : { role },
       });
       schedulesData.value = schRes.data;
     }
@@ -733,11 +1110,13 @@ const refreshData = async () => {
 };
 
 const loadSeniorsData = async () => {
+  const role = getUserRole();
   const res = await axios.get("/api/data/seniors", {
     params: {
       page: currentPage.value,
       page_size: pageSize.value,
       community: tableFilter.value === "all" ? "" : tableFilter.value,
+      role,
     },
   });
   seniorsData.value = res.data.items;
@@ -745,12 +1124,14 @@ const loadSeniorsData = async () => {
 };
 
 const loadHealthRecords = async () => {
+  const role = getUserRole();
   const res = await axios.get("/api/data/health-records", {
     params: {
       page: healthCurrentPage.value,
       page_size: healthPageSize.value,
       start_date: dateRange.value?.[0] || "",
       end_date: dateRange.value?.[1] || "",
+      role,
     },
   });
   healthRecords.value = res.data.items;
@@ -758,12 +1139,14 @@ const loadHealthRecords = async () => {
 };
 
 const loadServiceRecords = async () => {
+  const role = getUserRole();
   const res = await axios.get("/api/data/service-records", {
     params: {
       page: serviceCurrentPage.value,
       page_size: servicePageSize.value,
       service_type:
         serviceTypeFilter.value === "all" ? "" : serviceTypeFilter.value,
+      role,
     },
   });
   serviceRecords.value = res.data.items;
@@ -772,21 +1155,34 @@ const loadServiceRecords = async () => {
 
 // 提交逻辑
 const submitCommunity = async () => {
-  try {
-    if (dialogs.community.isEdit) {
-      await axios.put(
-        `/api/data/communities/${dialogs.community.form.community_id}`,
-        dialogs.community.form,
-      );
-    } else {
-      await axios.post("/api/data/communities", dialogs.community.form);
+  if (!communityFormRef.value) return;
+
+  await communityFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const role = getUserRole();
+      if (dialogs.community.isEdit) {
+        await axios.put(
+          `/api/data/communities/${dialogs.community.form.community_id}?role=${role}`,
+          dialogs.community.form,
+        );
+      } else {
+        await axios.post(
+          `/api/data/communities?role=${role}`,
+          dialogs.community.form,
+        );
+      }
+      ElMessage.success("保存成功");
+      dialogs.community.visible = false;
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.response?.data?.error || e.error || "保存失败");
+    } finally {
+      submitting.value = false;
     }
-    ElMessage.success("保存成功");
-    dialogs.community.visible = false;
-    refreshData();
-  } catch (e: any) {
-    ElMessage.error(e.error || "保存失败");
-  }
+  });
 };
 
 const handleEditCommunity = (row: any) => {
@@ -796,32 +1192,49 @@ const handleEditCommunity = (row: any) => {
 };
 
 const handleDeleteCommunity = (id: string) => {
+  const role = getUserRole();
   ElMessageBox.confirm("确定删除该社区吗？", "提示", { type: "warning" }).then(
     async () => {
       try {
-        await axios.delete(`/api/data/communities/${id}`);
+        await axios.delete(`/api/data/communities/${id}?role=${role}`);
         ElMessage.success("删除成功");
         refreshData();
       } catch (e: any) {
-        ElMessage.error(e.error || "删除失败");
+        ElMessage.error(e.response?.data?.error || e.error || "删除失败");
       }
     },
   );
 };
 
 const submitElderly = async () => {
-  try {
-    if (dialogs.elderly.isEdit) {
-      await axios.put(`/api/data/seniors/${dialogs.elderly.form.elderly_id}`, dialogs.elderly.form);
-    } else {
-      await axios.post("/api/data/seniors", dialogs.elderly.form);
+  if (!elderlyFormRef.value) return;
+
+  await elderlyFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const role = getUserRole();
+      if (dialogs.elderly.isEdit) {
+        await axios.put(
+          `/api/data/seniors/${dialogs.elderly.form.elderly_id}?role=${role}`,
+          dialogs.elderly.form,
+        );
+      } else {
+        await axios.post(
+          `/api/data/seniors?role=${role}`,
+          dialogs.elderly.form,
+        );
+      }
+      ElMessage.success("保存成功");
+      dialogs.elderly.visible = false;
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.response?.data?.error || e.error || "保存失败");
+    } finally {
+      submitting.value = false;
     }
-    ElMessage.success("保存成功");
-    dialogs.elderly.visible = false;
-    refreshData();
-  } catch (e: any) {
-    ElMessage.error(e.error || "保存失败");
-  }
+  });
 };
 
 const handleEditElderly = (row: any) => {
@@ -831,63 +1244,149 @@ const handleEditElderly = (row: any) => {
 };
 
 const handleDeleteElderly = (id: string) => {
-  ElMessageBox.confirm('确定删除该老人信息吗？', '提示', { type: 'warning' }).then(async () => {
+  const role = getUserRole();
+  ElMessageBox.confirm("确定删除该老人信息吗？", "提示", {
+    type: "warning",
+  }).then(async () => {
     try {
-      await axios.delete(`/api/data/seniors/${id}`);
+      await axios.delete(`/api/data/seniors/${id}?role=${role}`);
       ElMessage.success("删除成功");
       refreshData();
     } catch (e: any) {
-      ElMessage.error(e.error || "删除失败");
+      ElMessage.error(e.response?.data?.error || e.error || "删除失败");
     }
   });
 };
 
 const submitCaregiver = async () => {
-  try {
-    await axios.post("/api/data/caregivers", dialogs.caregiver.form);
-    ElMessage.success("添加成功");
-    dialogs.caregiver.visible = false;
-    refreshData();
-  } catch (e: any) {
-    ElMessage.error(e.error || "添加失败");
-  }
+  if (!caregiverFormRef.value) return;
+
+  await caregiverFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const role = getUserRole();
+      if (dialogs.caregiver.isEdit) {
+        await axios.put(
+          `/api/data/caregivers/${dialogs.caregiver.form.caregiver_id}?role=${role}`,
+          dialogs.caregiver.form,
+        );
+      } else {
+        await axios.post(
+          `/api/data/caregivers?role=${role}`,
+          dialogs.caregiver.form,
+        );
+      }
+      ElMessage.success(dialogs.caregiver.isEdit ? "修改成功" : "添加成功");
+      dialogs.caregiver.visible = false;
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.response?.data?.error || e.error || "操作失败");
+    } finally {
+      submitting.value = false;
+    }
+  });
+};
+
+const handleEditCaregiver = (row: any) => {
+  dialogs.caregiver.isEdit = true;
+  dialogs.caregiver.form = { ...row };
+  dialogs.caregiver.visible = true;
+};
+
+const handleDeleteCaregiver = (id: string) => {
+  const role = getUserRole();
+  ElMessageBox.confirm("确定删除该护工吗？", "提示", { type: "warning" }).then(
+    async () => {
+      try {
+        await axios.delete(`/api/data/caregivers/${id}?role=${role}`);
+        ElMessage.success("删除成功");
+        refreshData();
+      } catch (e: any) {
+        ElMessage.error(e.response?.data?.error || e.error || "删除失败");
+      }
+    },
+  );
 };
 
 const submitSchedule = async () => {
-  try {
-    await axios.post("/api/data/schedules", dialogs.schedule.form);
-    ElMessage.success("排班成功");
-    dialogs.schedule.visible = false;
-    refreshData();
-  } catch (e: any) {
-    ElMessage.error(e.error || "排班失败");
-  }
+  if (!scheduleFormRef.value) return;
+
+  await scheduleFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const role = getUserRole();
+      await axios.post(
+        `/api/data/schedules?role=${role}`,
+        dialogs.schedule.form,
+      );
+      ElMessage.success("排班成功");
+      dialogs.schedule.visible = false;
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.response?.data?.error || e.error || "排班失败");
+    } finally {
+      submitting.value = false;
+    }
+  });
 };
 
 const submitHealthRecord = async () => {
-  try {
-    await axios.post("/api/data/health-records", dialogs.healthRecord.form);
-    ElMessage.success("上报成功");
-    dialogs.healthRecord.visible = false;
-    refreshData();
-  } catch (e: any) {
-    ElMessage.error(e.error || "上报失败");
-  }
+  if (!healthRecordFormRef.value) return;
+
+  await healthRecordFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const role = getUserRole();
+      await axios.post(
+        `/api/data/health-records?role=${role}`,
+        dialogs.healthRecord.form,
+      );
+      ElMessage.success("上报成功");
+      dialogs.healthRecord.visible = false;
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.response?.data?.error || e.error || "上报失败");
+    } finally {
+      submitting.value = false;
+    }
+  });
 };
 
 const submitServiceRecord = async () => {
-  try {
-    await axios.post("/api/data/service-records", dialogs.serviceRecord.form);
-    ElMessage.success("提交成功");
-    dialogs.serviceRecord.visible = false;
-    refreshData();
-  } catch (e: any) {
-    ElMessage.error(e.error || "提交失败");
-  }
+  if (!serviceRecordFormRef.value) return;
+
+  await serviceRecordFormRef.value.validate(async (valid) => {
+    if (!valid) return;
+
+    submitting.value = true;
+    try {
+      const role = getUserRole();
+      await axios.post(
+        `/api/data/service-records?role=${role}`,
+        dialogs.serviceRecord.form,
+      );
+      ElMessage.success("提交成功");
+      dialogs.serviceRecord.visible = false;
+      refreshData();
+    } catch (e: any) {
+      ElMessage.error(e.response?.data?.error || e.error || "提交失败");
+    } finally {
+      submitting.value = false;
+    }
+  });
 };
 
 const showReportDialog = async () => {
-  const res = await axios.get("/api/data/reports/community");
+  const role = getUserRole();
+  const res = await axios.get("/api/data/reports/community", {
+    params: { role },
+  });
   ElMessageBox.alert(
     `<pre>${JSON.stringify(res.data, null, 2)}</pre>`,
     "社区全景统计报表",
@@ -907,6 +1406,22 @@ const handleCurrentChange = (val: number) => {
   currentPage.value = val;
   loadSeniorsData();
 };
+const handleHealthSizeChange = (val: number) => {
+  healthPageSize.value = val;
+  loadHealthRecords();
+};
+const handleHealthCurrentChange = (val: number) => {
+  healthCurrentPage.value = val;
+  loadHealthRecords();
+};
+const handleServiceSizeChange = (val: number) => {
+  servicePageSize.value = val;
+  loadServiceRecords();
+};
+const handleServiceCurrentChange = (val: number) => {
+  serviceCurrentPage.value = val;
+  loadServiceRecords();
+};
 const filterHealthRecords = () => {
   healthCurrentPage.value = 1;
   loadHealthRecords();
@@ -915,6 +1430,17 @@ const filterServiceRecords = () => {
   serviceCurrentPage.value = 1;
   loadServiceRecords();
 };
+
+// 监听筛选条件变化
+watch(tableFilter, () => {
+  currentPage.value = 1;
+  loadSeniorsData();
+});
+
+watch(serviceTypeFilter, () => {
+  serviceCurrentPage.value = 1;
+  loadServiceRecords();
+});
 
 onMounted(() => {
   refreshData();

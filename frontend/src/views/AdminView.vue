@@ -24,7 +24,7 @@
           </div>
           <div class="info-item">
             <span class="info-label">数据存储:</span>
-            <span class="info-value">SQLite</span>
+            <span class="info-value">Hive, HBase, HDFS</span>
           </div>
           <div class="info-item">
             <span class="info-label">预测模型:</span>
