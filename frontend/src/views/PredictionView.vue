@@ -223,6 +223,7 @@
           <el-empty description="未检测到异常" />
         </div>
       </el-card>
+      <div class="size-box" style="height: 20px; width: 100%"></div>
       <!-- 模型评估与对比 -->
       <el-card style="margin-bottom: 20px">
         <template #header>
