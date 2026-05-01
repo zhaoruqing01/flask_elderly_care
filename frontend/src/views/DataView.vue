@@ -151,7 +151,7 @@
       </el-card>
 
       <!-- 排班管理 -->
-      <el-card v-if="isInstitution || isCaregiver" style="margin-bottom: 20px">
+      <!-- <el-card v-if="isInstitution || isCaregiver" style="margin-bottom: 20px">
         <template #header>
           <div class="card-header">
             <span>排班管理</span>
@@ -176,7 +176,7 @@
           <el-table-column prop="service_time_slot" label="时间段" />
           <el-table-column prop="status" label="状态" />
         </el-table>
-      </el-card>
+      </el-card> -->
 
       <!-- 老人基本信息 -->
       <el-card style="margin-bottom: 20px">
