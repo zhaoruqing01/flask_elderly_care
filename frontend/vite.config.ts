@@ -20,10 +20,6 @@ export default defineConfig({
         changeOrigin: true,
       },
     },
-    allowedHosts: [
-      "localhost",
-      "127.0.0.1",
-      "f648f867.natappfree.cc", // 加上你的 natapp 域名
-    ],
+    allowedHosts: ["localhost", "127.0.0.1", "t546a7f9.natappfree.cc"],
   },
 });

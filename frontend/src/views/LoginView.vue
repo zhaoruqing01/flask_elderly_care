@@ -166,15 +166,38 @@
                   <h4>
                     <el-icon><Collection /></el-icon> 核心功能
                   </h4>
-                  <ul class="feature-list">
-                    <li
-                      v-for="feature in role.features.slice(0, 4)"
-                      :key="feature"
-                    >
+                  <el-tooltip
+                    v-if="role.features.length > 4"
+                    placement="top"
+                    effect="light"
+                    :show-after="300"
+                  >
+                    <template #content>
+                      <div class="tooltip-content">
+                        <div
+                          v-for="feature in role.features"
+                          :key="feature"
+                          class="tooltip-item"
+                        >
+                          {{ feature }}
+                        </div>
+                      </div>
+                    </template>
+                    <ul class="feature-list">
+                      <li
+                        v-for="feature in role.features.slice(0, 4)"
+                        :key="feature"
+                      >
+                        {{ feature }}
+                      </li>
+                      <li class="more-text">
+                        等{{ role.features.length }}项功能...
+                      </li>
+                    </ul>
+                  </el-tooltip>
+                  <ul v-else class="feature-list">
+                    <li v-for="feature in role.features" :key="feature">
                       {{ feature }}
-                    </li>
-                    <li v-if="role.features.length > 4" class="more-text">
-                      等{{ role.features.length }}项功能...
                     </li>
                   </ul>
                 </div>
@@ -248,7 +271,6 @@ const roleList = [
       "管理社区信息（增删改查）",
       "管理老人档案（增删改查）",
       "管理护工信息（新增/查看）",
-      "管理排班计划（新增/查看）",
       "查看所有健康记录",
       "查看所有服务记录",
       "查看需求预测结果",
@@ -256,7 +278,7 @@ const roleList = [
       "训练机器学习模型",
       "查看社区全景统计报表",
     ],
-    permissions: ["数据管理", "用户管理", "系统配置", "报表查看"],
+    permissions: ["数据管理", "护工管理", "系统配置", "报表查看"],
   },
   {
     role: "caregiver",
@@ -268,12 +290,11 @@ const roleList = [
     features: [
       "上报老人健康记录",
       "提交服务完成记录",
-      "查看个人排班计划",
       "查看负责的老人信息",
       "查看健康统计数据",
       "查看服务统计数据",
     ],
-    permissions: ["健康上报", "服务记录", "排班查看"],
+    permissions: ["健康上报", "服务记录", "需求预测"],
   },
   {
     role: "regulatory",
@@ -583,5 +604,21 @@ function toggleForm() {
   display: flex;
   flex-wrap: wrap;
   gap: 4px;
+}
+
+/* Tooltip 内容样式 */
+.tooltip-content {
+  max-width: 300px;
+}
+
+.tooltip-item {
+  padding: 4px 0;
+  font-size: 13px;
+  line-height: 1.6;
+  color: #303133;
+}
+
+.tooltip-item:not(:last-child) {
+  border-bottom: 1px solid #ebeef5;
 }
 </style>
